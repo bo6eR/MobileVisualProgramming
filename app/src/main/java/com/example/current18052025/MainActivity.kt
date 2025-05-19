@@ -26,10 +26,12 @@ import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.rememberDrawerState
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.CoroutineScope
 import kotlin.math.roundToInt
 
 
@@ -41,18 +43,18 @@ class MainActivity : ComponentActivity() {
                 var variableList by remember { mutableStateOf(listOf<VariableData>()) }
                 var placedBlocks = remember { mutableStateListOf<VariableData>() }
 
-                var draggingVar by remember { mutableStateOf<VariableData?>(null) }
-                var dragOffset by remember { mutableStateOf(Offset.Zero) }
+                var draggingVar = remember { mutableStateOf<VariableData?>(null) }
+                var dragOffset = remember { mutableStateOf(Offset.Zero) }
 
                 val drawerState = rememberDrawerState(DrawerValue.Closed)
                 val scope = rememberCoroutineScope()
 
-                var showAddDialog by remember { mutableStateOf(false) }
+                var showAddDialog = remember { mutableStateOf(false) }
 
                 AddVariableDialog(
-                    show = showAddDialog,
+                    show = showAddDialog.value,
                     onAdd = { variableList = variableList + it },
-                    onDismiss = { showAddDialog = false }
+                    onDismiss = { showAddDialog.value = false }
                 )
 
                 ModalNavigationDrawer(
@@ -63,126 +65,24 @@ class MainActivity : ComponentActivity() {
                             drawerContainerColor = Color.DarkGray
 
                         ) {
-
-                            //MENU a to ya zaputayus' chto gde pishu
-                            var widthOfVar by remember { mutableStateOf(0) }
-                            Column(modifier = Modifier
-                                .fillMaxSize()
-                                .onSizeChanged { size ->
-                                    widthOfVar = size.width // ширина в пикселях
-                                },
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceEvenly
-                                ){
-                                    Text("Variables", color = Color.White, fontSize = 30.sp)
-                                    Button(
-                                        onClick = { showAddDialog = true },
-                                        modifier = Modifier.size(35.dp),
-                                        colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
-                                        contentPadding = PaddingValues(0.dp)
-                                    ) {
-                                        Text("+", color = Color.White, fontSize = 25.sp)
-                                    }
-                                }
-
-                                Spacer(Modifier.height(8.dp))
-                                val density = LocalDensity.current
-                                val widthDp = with(density) { (widthOfVar-150).toDp() }
-
-                                variableList.forEach { variable ->
-                                    Text(
-                                        text = variable.name,
-                                        textAlign = TextAlign.Center,
-                                        fontSize = 30.sp,
-                                        modifier = Modifier
-                                            .padding(20.dp)
-                                            .background(Color.LightGray, shape = RoundedCornerShape(12.dp))
-                                            .width(widthDp)
-                                            .pointerInput(variable) {
-                                                detectDragGestures(
-                                                    onDragStart = {
-                                                        draggingVar = variable
-                                                        dragOffset = it
-                                                        scope.launch {
-                                                            drawerState.close()
-                                                        }
-                                                    },
-                                                    onDrag = { change, offset ->
-                                                        change.consume()
-                                                        dragOffset += offset
-                                                    },
-                                                    onDragEnd = {
-                                                        placedBlocks.add(draggingVar!!.copy(position = dragOffset))
-                                                        draggingVar = null
-                                                        dragOffset = Offset.Zero
-                                                    },
-                                                    onDragCancel = {
-                                                        draggingVar = null
-                                                        dragOffset = Offset.Zero
-                                                    }
-                                                )
-                                            }
-                                    )
-                                }
-
-
-                            }
-
-
-
-
+                            DrawerMenuContent(
+                                variableList = variableList,
+                                showAddDialog = showAddDialog,
+                                draggingVar = draggingVar,
+                                dragOffset = dragOffset,
+                                placedBlocks = placedBlocks,
+                                drawerState = drawerState,
+                                scope = scope)
                         }
                     }
                 ) {
-
-                    //MAIN_PAGE a to ya zaputayus' chto gde pishu
-                    Box(modifier = Modifier.fillMaxSize()){
-
-                        placedBlocks.forEachIndexed  { index, variable ->
-                            Box(
-                                modifier = Modifier
-                                    .offset { IntOffset(variable.position.x.roundToInt(), variable.position.y.roundToInt()) }
-                                    .pointerInput(Unit) {
-                                        detectDragGestures { change, dragAmount ->
-                                            change.consume()
-                                            val oldVar = placedBlocks[index]
-                                            val newPosition = oldVar.position + dragAmount
-                                            placedBlocks[index] = oldVar.copy(position = newPosition)
-                                        }
-                                    }
-                            ) {
-                                VarBlock(variable = variable)
-                            }
-                        }
-
-                        Button(
-                            onClick = {
-                                scope.launch {
-                                    if (drawerState.isClosed) drawerState.open() else drawerState.close()
-                                }
-                            },
-                            modifier = Modifier.align(Alignment.BottomEnd).padding(end = 10.dp, bottom = 40.dp),
-                        ) {
-                            Text("Open/close menu", fontSize = 20.sp)
-                        }
-                        draggingVar?.let { variable ->
-                            Box(
-                                modifier = Modifier
-                                    .offset { IntOffset(dragOffset.x.toInt(), dragOffset.y.toInt()) }
-                                    .zIndex(1f)
-                                    .pointerInput(Unit) {}
-                            ) {
-                                VarBlock(variable = variable)
-                            }
-                        }
-
-                    }
-
-
+                    MainPage(
+                        placedBlocks = placedBlocks,
+                        drawerState = drawerState,
+                        scope = scope,
+                        draggingVar = draggingVar,
+                        dragOffset = dragOffset
+                    )
                 }
 
 
@@ -191,6 +91,142 @@ class MainActivity : ComponentActivity() {
 
             }
         }
+    }
+}
+
+@Composable
+fun MainPage(
+    placedBlocks: SnapshotStateList<VariableData>,
+    drawerState: DrawerState,
+    scope: CoroutineScope,
+    draggingVar: MutableState<VariableData?>,
+    dragOffset: MutableState<Offset>
+){
+    Box(modifier = Modifier.fillMaxSize()){
+
+        placedBlocks.forEachIndexed  { index, variable ->
+            Box(
+                modifier = Modifier
+                    .offset { IntOffset(variable.position.x.roundToInt(), variable.position.y.roundToInt()) }
+                    .pointerInput(Unit) {
+                        detectDragGestures { change, dragAmount ->
+                            change.consume()
+                            val oldVar = placedBlocks[index]
+                            val newPosition = oldVar.position + dragAmount
+                            placedBlocks[index] = oldVar.copy(position = newPosition)
+                        }
+                    }
+            ) {
+                VarBlock(variable = variable)
+            }
+        }
+
+        ButtonOfMenuOpening(scope, drawerState)
+
+        draggingVar.value?.let { variable ->
+            Box(
+                modifier = Modifier
+                    .offset { IntOffset(dragOffset.value.x.roundToInt(), dragOffset.value.y.roundToInt()) }
+                    .zIndex(1f)
+                    .pointerInput(Unit) {}
+            ) {
+                VarBlock(variable = variable)
+            }
+        }
+
+    }
+}
+
+@Composable
+fun BoxScope.ButtonOfMenuOpening(scope: CoroutineScope, drawerState: DrawerState){
+    Button(
+        onClick = {
+            scope.launch {
+                if (drawerState.isClosed) drawerState.open() else drawerState.close()
+            }
+        },
+        modifier = Modifier.align(Alignment.BottomEnd).padding(end = 10.dp, bottom = 40.dp),
+    ) {
+        Text("Open/close menu", fontSize = 20.sp)
+    }
+}
+
+@Composable
+fun DrawerMenuContent(
+    variableList: List<VariableData>,
+    showAddDialog: MutableState<Boolean>,
+    draggingVar: MutableState<VariableData?>,
+    dragOffset: MutableState<Offset>,
+    placedBlocks: SnapshotStateList<VariableData>,
+    drawerState: DrawerState,
+    scope: CoroutineScope
+){
+    //MENU a to ya zaputayus' chto gde pishu
+    var widthOfVar by remember { mutableStateOf(0) }
+    Column(modifier = Modifier
+        .fillMaxSize()
+        .onSizeChanged { size ->
+            widthOfVar = size.width // ширина в пикселях
+        },
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ){
+            Text("Variables", color = Color.White, fontSize = 30.sp)
+            Button(
+                onClick = { showAddDialog.value = true },
+                modifier = Modifier.size(35.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
+                contentPadding = PaddingValues(0.dp)
+            ) {
+                Text("+", color = Color.White, fontSize = 25.sp)
+            }
+        }
+
+        Spacer(Modifier.height(8.dp))
+        val density = LocalDensity.current
+        val widthDp = with(density) { (widthOfVar-150).toDp() }
+
+        variableList.forEach { variable ->
+            Text(
+                text = variable.name,
+                textAlign = TextAlign.Center,
+                fontSize = 30.sp,
+                modifier = Modifier
+                    .padding(20.dp)
+                    .background(Color.LightGray, shape = RoundedCornerShape(12.dp))
+                    .width(widthDp)
+                    .pointerInput(variable) {
+                        detectDragGestures(
+                            onDragStart = {
+                                draggingVar.value = variable
+                                dragOffset.value = it
+                                scope.launch {
+                                    drawerState.close()
+                                }
+                            },
+                            onDrag = { change, offset ->
+                                change.consume()
+                                dragOffset.value += offset
+                            },
+                            onDragEnd = {
+                                placedBlocks.add(draggingVar.value!!.copy(position = dragOffset.value))
+                                draggingVar.value = null
+                                dragOffset.value = Offset.Zero
+                            },
+                            onDragCancel = {
+                                draggingVar.value = null
+                                dragOffset.value = Offset.Zero
+                            }
+                        )
+                    }
+            )
+        }
+
+
     }
 }
 
