@@ -2,8 +2,9 @@ package com.example.mobilevisualprogramming.main
 
 import androidx.compose.ui.geometry.Offset
 
-data class VariableData(
-    val name: String,
-    val value: Int = 0,
+enum class PinType { EXEC_IN, EXEC_OUT, DATA_IN, DATA_OUT }
+
+data class PinData(
+    val type: PinType,
     var position: Offset = Offset.Zero
 )

@@ -6,34 +6,29 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.zIndex
-import com.example.mobilevisualprogramming.main.VariableData
-import com.example.mobilevisualprogramming.blocks.VarBlock
-import com.example.mobilevisualprogramming.blocks.messages.AddVariableDialog
-import androidx.compose.ui.Alignment
-import kotlinx.coroutines.launch
-import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.ModalDrawerSheet
-import androidx.compose.material3.rememberDrawerState
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
+import com.example.mobilevisualprogramming.blocks.*
+import com.example.mobilevisualprogramming.main.VariableData
+import com.example.mobilevisualprogramming.blocks.messages.AddVariableDialog
+import com.example.mobilevisualprogramming.blocks.messages.SetGetChoiceMessage
+import com.example.mobilevisualprogramming.blocks.getandset.GetVarBlock
+import com.example.mobilevisualprogramming.blocks.getandset.SetVarBlock
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
-
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,38 +36,63 @@ class MainActivity : ComponentActivity() {
         setContent {
             MaterialTheme {
                 var variableList by remember { mutableStateOf(listOf<VariableData>()) }
-                var placedBlocks = remember { mutableStateListOf<VariableData>() }
+                val placedBlocks = remember { mutableStateListOf<VarBlock>() }
 
-                var draggingVar = remember { mutableStateOf<VariableData?>(null) }
-                var dragOffset = remember { mutableStateOf(Offset.Zero) }
+                val draggingVar = remember { mutableStateOf<VariableData?>(null) }
+                val dragOffset = remember { mutableStateOf(Offset.Zero) }
 
                 val drawerState = rememberDrawerState(DrawerValue.Closed)
                 val scope = rememberCoroutineScope()
 
-                var showAddDialog = remember { mutableStateOf(false) }
+                val showAddDialog = remember { mutableStateOf(false) }
+                val showSetGetDialog = remember { mutableStateOf(false) }
+                val chosenVariableTemp = remember { mutableStateOf<VariableData?>(null) }
 
+                // Добавление переменной
                 AddVariableDialog(
                     show = showAddDialog.value,
                     onAdd = { variableList = variableList + it },
                     onDismiss = { showAddDialog.value = false }
                 )
 
+                // Диалог выбора Get/Set
+                SetGetChoiceMessage(
+                    show = showSetGetDialog,
+                    onChoice = { isGet ->
+                        chosenVariableTemp.value?.let { variable ->
+                            val newVariable = VariableData(
+                                name = variable.name,
+                                value = variable.value,
+                                position = dragOffset.value
+                            )
+                            val block = if (isGet) GetVarBlock(newVariable)
+                            else SetVarBlock(newVariable)
+                            placedBlocks.add(block)
+                        }
+                        showSetGetDialog.value = false
+                        chosenVariableTemp.value = null
+                    }
+                )
+
                 ModalNavigationDrawer(
                     drawerState = drawerState,
                     drawerContent = {
-                        ModalDrawerSheet(modifier = Modifier
-                            .width(300.dp),
+                        ModalDrawerSheet(
+                            modifier = Modifier.width(300.dp),
                             drawerContainerColor = Color.DarkGray
-
                         ) {
                             DrawerMenuContent(
                                 variableList = variableList,
                                 showAddDialog = showAddDialog,
                                 draggingVar = draggingVar,
                                 dragOffset = dragOffset,
-                                placedBlocks = placedBlocks,
+                                onVarDropped = { variable ->
+                                    chosenVariableTemp.value = variable
+                                    showSetGetDialog.value = true
+                                },
                                 drawerState = drawerState,
-                                scope = scope)
+                                scope = scope
+                            )
                         }
                     }
                 ) {
@@ -84,11 +104,6 @@ class MainActivity : ComponentActivity() {
                         dragOffset = dragOffset
                     )
                 }
-
-
-
-
-
             }
         }
     }
@@ -96,28 +111,30 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainPage(
-    placedBlocks: SnapshotStateList<VariableData>,
+    placedBlocks: List<VarBlock>,
     drawerState: DrawerState,
     scope: CoroutineScope,
     draggingVar: MutableState<VariableData?>,
     dragOffset: MutableState<Offset>
-){
-    Box(modifier = Modifier.fillMaxSize()){
-
-        placedBlocks.forEachIndexed  { index, variable ->
+) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        placedBlocks.forEach { block ->
             Box(
                 modifier = Modifier
-                    .offset { IntOffset(variable.position.x.roundToInt(), variable.position.y.roundToInt()) }
+                    .offset {
+                        IntOffset(
+                            block.variable.position.x.roundToInt(),
+                            block.variable.position.y.roundToInt()
+                        )
+                    }
                     .pointerInput(Unit) {
                         detectDragGestures { change, dragAmount ->
                             change.consume()
-                            val oldVar = placedBlocks[index]
-                            val newPosition = oldVar.position + dragAmount
-                            placedBlocks[index] = oldVar.copy(position = newPosition)
+                            block.variable.position += dragAmount
                         }
                     }
             ) {
-                VarBlock(variable = variable)
+                block.Render()
             }
         }
 
@@ -126,19 +143,27 @@ fun MainPage(
         draggingVar.value?.let { variable ->
             Box(
                 modifier = Modifier
-                    .offset { IntOffset(dragOffset.value.x.roundToInt(), dragOffset.value.y.roundToInt()) }
+                    .offset {
+                        IntOffset(
+                            dragOffset.value.x.roundToInt(),
+                            dragOffset.value.y.roundToInt()
+                        )
+                    }
                     .zIndex(1f)
-                    .pointerInput(Unit) {}
             ) {
-                VarBlock(variable = variable)
+                Text(
+                    text = variable.name,
+                    modifier = Modifier
+                        .background(Color.LightGray, RoundedCornerShape(8.dp))
+                        .padding(8.dp)
+                )
             }
         }
-
     }
 }
 
 @Composable
-fun BoxScope.ButtonOfMenuOpening(scope: CoroutineScope, drawerState: DrawerState){
+fun BoxScope.ButtonOfMenuOpening(scope: CoroutineScope, drawerState: DrawerState) {
     Button(
         onClick = {
             scope.launch {
@@ -157,24 +182,22 @@ fun DrawerMenuContent(
     showAddDialog: MutableState<Boolean>,
     draggingVar: MutableState<VariableData?>,
     dragOffset: MutableState<Offset>,
-    placedBlocks: SnapshotStateList<VariableData>,
+    onVarDropped: (VariableData) -> Unit,
     drawerState: DrawerState,
     scope: CoroutineScope
-){
-    //MENU a to ya zaputayus' chto gde pishu
+) {
     var widthOfVar by remember { mutableStateOf(0) }
-    Column(modifier = Modifier
-        .fillMaxSize()
-        .onSizeChanged { size ->
-            widthOfVar = size.width // ширина в пикселях
-        },
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .onSizeChanged { size -> widthOfVar = size.width },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
-        ){
+        ) {
             Text("Variables", color = Color.White, fontSize = 30.sp)
             Button(
                 onClick = { showAddDialog.value = true },
@@ -187,8 +210,6 @@ fun DrawerMenuContent(
         }
 
         Spacer(Modifier.height(8.dp))
-        val density = LocalDensity.current
-        val widthDp = with(density) { (widthOfVar-150).toDp() }
 
         variableList.forEach { variable ->
             Text(
@@ -198,22 +219,20 @@ fun DrawerMenuContent(
                 modifier = Modifier
                     .padding(20.dp)
                     .background(Color.LightGray, shape = RoundedCornerShape(12.dp))
-                    .width(widthDp)
+                    .width((widthOfVar - 150).dp)
                     .pointerInput(variable) {
                         detectDragGestures(
                             onDragStart = {
                                 draggingVar.value = variable
                                 dragOffset.value = it
-                                scope.launch {
-                                    drawerState.close()
-                                }
+                                scope.launch { drawerState.close() }
                             },
                             onDrag = { change, offset ->
                                 change.consume()
                                 dragOffset.value += offset
                             },
                             onDragEnd = {
-                                placedBlocks.add(draggingVar.value!!.copy(position = dragOffset.value))
+                                onVarDropped(variable)
                                 draggingVar.value = null
                                 dragOffset.value = Offset.Zero
                             },
@@ -225,9 +244,5 @@ fun DrawerMenuContent(
                     }
             )
         }
-
-
     }
 }
-
-
