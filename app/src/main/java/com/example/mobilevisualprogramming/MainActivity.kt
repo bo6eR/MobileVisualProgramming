@@ -5,6 +5,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.rememberTransformableState
+import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -13,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.style.TextAlign
@@ -116,7 +119,24 @@ fun MainPage(
     draggingVar: MutableState<VariableData?>,
     dragOffset: MutableState<Offset>
 ) {
-    Box(modifier = Modifier.fillMaxSize()) {
+    var scale by remember { mutableStateOf(1f) }
+    var offset by remember { mutableStateOf(Offset.Zero) }
+
+    Box(modifier = Modifier
+        .fillMaxSize()
+        .transformable(
+            state = rememberTransformableState { zoomChange, panChange, _ ->
+                scale = (scale * zoomChange).coerceIn(0.5f, 3f)
+                offset += panChange
+            }
+        )
+        .graphicsLayer(
+            scaleX = scale,
+            scaleY = scale,
+            translationX = offset.x,
+            translationY = offset.y
+        )
+    ) {
         placedBlocks.forEach { block ->
             Box(
                 modifier = Modifier
@@ -129,7 +149,7 @@ fun MainPage(
                     .pointerInput(Unit) {
                         detectDragGestures { change, dragAmount ->
                             change.consume()
-                            block.variable.position += dragAmount
+                            block.variable.position += dragAmount / scale
                         }
                     }
             ) {
@@ -137,7 +157,7 @@ fun MainPage(
             }
         }
 
-        ButtonOfMenuOpening(scope, drawerState)
+
 
         draggingVar.value?.let { variable ->
             Box(
@@ -158,6 +178,9 @@ fun MainPage(
                 )
             }
         }
+    }
+    Box(modifier = Modifier.fillMaxSize()){
+        ButtonOfMenuOpening(scope, drawerState)
     }
 }
 
