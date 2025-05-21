@@ -18,7 +18,6 @@ abstract class OperatorBlock(
     var expression by mutableStateOf("")
     var error by mutableStateOf("")
 
-    // Проверка скобок (взято из SetVarBlock)
     fun isBracketsValid(s: String): Boolean {
         var balance = 0
         for (char in s) {
@@ -33,26 +32,20 @@ abstract class OperatorBlock(
         return balance == 0
     }
 
-    // Вычисление выражения (взято из SetVarBlock)
     protected fun evaluateExpression(expr: String): Int {
-        // Заменяем переменные на их значения
         val replaced = Regex("[a-zA-Z_]\\w*").replace(expr) {
             val name = it.value
             availableVariables[name]?.toString() ?: throw IllegalArgumentException("Переменная \"$name\" не объявлена")
         }
 
-        // Проверка на недопустимые символы
         if (Regex("[^0-9+\\-*/%().\\s]").containsMatchIn(replaced)) {
             throw IllegalArgumentException("Недопустимые символы в выражении")
         }
 
-        // Конвертируем в Обратную Польскую Нотацию (ОПН)
         val rpn = toRPN(replaced)
-        // Вычисляем ОПН
         return evalRPN(rpn)
     }
 
-    // Алгоритм сортировочной станции (Shunting Yard)
     private fun toRPN(expr: String): List<String> {
         val output = mutableListOf<String>()
         val stack = Stack<String>()
@@ -83,7 +76,6 @@ abstract class OperatorBlock(
         return output
     }
 
-    // Приоритет операторов
     private fun precedence(op: String): Int {
         return when (op) {
             "+", "-" -> 1
@@ -92,7 +84,6 @@ abstract class OperatorBlock(
         }
     }
 
-    // Вычисление ОПН
     private fun evalRPN(rpn: List<String>): Int {
         val stack = Stack<Int>()
         for (token in rpn) {
@@ -108,10 +99,7 @@ abstract class OperatorBlock(
         return stack.pop()
     }
 
-    // Абстрактный метод для применения операции
     protected abstract fun applyOperation(a: Int, b: Int, op: String): Int
-
-    // Абстрактный метод выполнения
     abstract fun execute()
 
     @Composable

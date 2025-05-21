@@ -50,16 +50,9 @@ class MainActivity : ComponentActivity() {
                 val showSetGetDialog = remember { mutableStateOf(false) }
                 val chosenVariableTemp = remember { mutableStateOf<VariableData?>(null) }
 
-                // Добавление переменной
-                AddVariableDialog(
-                    show = showAddDialog.value,
-                    onAdd = { variableList = variableList + it },
-                    onDismiss = { showAddDialog.value = false }
-                )
+                AddVariableDialog(show = showAddDialog.value, onAdd = { variableList = variableList + it }, onDismiss = { showAddDialog.value = false })
 
-                // Диалог выбора Get/Set
-                SetGetChoiceMessage(
-                    show = showSetGetDialog,
+                SetGetChoiceMessage(show = showSetGetDialog,
                     onChoice = { isGet ->
                         chosenVariableTemp.value?.let { variable ->
                             val newVariable = VariableData(
@@ -76,18 +69,13 @@ class MainActivity : ComponentActivity() {
                     }
                 )
 
-                ModalNavigationDrawer(
-                    drawerState = drawerState,
+                ModalNavigationDrawer(drawerState = drawerState,
                     drawerContent = {
                         ModalDrawerSheet(
                             modifier = Modifier.width(300.dp),
                             drawerContainerColor = Color.DarkGray
                         ) {
-                            DrawerMenuContent(
-                                variableList = variableList,
-                                showAddDialog = showAddDialog,
-                                draggingVar = draggingVar,
-                                dragOffset = dragOffset,
+                            DrawerMenuContent(variableList = variableList, showAddDialog = showAddDialog, draggingVar = draggingVar, dragOffset = dragOffset,
                                 onVarDropped = { variable ->
                                     chosenVariableTemp.value = variable
                                     showSetGetDialog.value = true
@@ -98,13 +86,7 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 ) {
-                    MainPage(
-                        placedBlocks = placedBlocks,
-                        drawerState = drawerState,
-                        scope = scope,
-                        draggingVar = draggingVar,
-                        dragOffset = dragOffset
-                    )
+                    MainPage(placedBlocks = placedBlocks, drawerState = drawerState, scope = scope, draggingVar = draggingVar, dragOffset = dragOffset)
                 }
             }
         }
@@ -156,8 +138,6 @@ fun MainPage(
                 block.Render()
             }
         }
-
-
 
         draggingVar.value?.let { variable ->
             Box(

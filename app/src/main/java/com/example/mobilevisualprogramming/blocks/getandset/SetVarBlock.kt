@@ -20,7 +20,6 @@ class SetVarBlock(
     var expression by mutableStateOf("")  // Введённое выражение
     var error by mutableStateOf("")       // Ошибка (если есть)
 
-    // Проверка скобок
     private fun isBracketsValid(s: String): Boolean {
         var balance = 0
         for (char in s)
@@ -39,24 +38,19 @@ class SetVarBlock(
     }
 
     fun evaluateExpression(expr: String, vars: Map<String, Int>): Int {
-        // Заменяем переменные на их значения
         val replaced = Regex("[a-zA-Z_]\\w*").replace(expr) {
             val name = it.value
             vars[name]?.toString() ?: throw IllegalArgumentException("Переменная \"$name\" не объявлена")
         }
 
-        // Проверка на недопустимые символы
         if (Regex("[^0-9+\\-*/%().\\s]").containsMatchIn(replaced)) {
             throw IllegalArgumentException("Недопустимые символы в выражении")
         }
 
-        // Конвертируем в Обратную Польскую Нотацию (ОПН)
         val rpn = toRPN(replaced)
-        // Вычисляем ОПН
         return evalRPN(rpn)
     }
 
-    // Алгоритм сортировочной станции (Shunting Yard) для преобразования в ОПН
     private fun toRPN(expr: String): List<String> {
         val output = mutableListOf<String>()
         val stack = Stack<String>()
@@ -78,7 +72,7 @@ class SetVarBlock(
                     while (stack.peek() != "(") {
                         output.add(stack.pop())
                     }
-                    stack.pop() // Удаляем "("
+                    stack.pop()
                 }
             }
         }
@@ -88,7 +82,6 @@ class SetVarBlock(
         return output
     }
 
-    // Приоритет операторов
     private fun precedence(op: String): Int {
         return when (op) {
             "+", "-" -> 1
@@ -97,7 +90,6 @@ class SetVarBlock(
         }
     }
 
-    // Вычисление ОПН
     private fun evalRPN(rpn: List<String>): Int {
         val stack = Stack<Int>()
         for (token in rpn) {
@@ -120,7 +112,6 @@ class SetVarBlock(
         return stack.pop()
     }
 
-    // Запуск блока
     fun execute() {
         error = ""
         try {

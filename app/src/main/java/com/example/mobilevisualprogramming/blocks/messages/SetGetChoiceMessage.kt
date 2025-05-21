@@ -12,7 +12,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import com.example.mobilevisualprogramming.main.VariableData
 
 @Composable
 fun SetGetChoiceMessage(
