@@ -20,10 +20,9 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import com.example.mobilevisualprogramming.blocks.*
 import com.example.mobilevisualprogramming.main.VariableData
-import com.example.mobilevisualprogramming.blocks.messages.AddVariableDialog
-import com.example.mobilevisualprogramming.blocks.messages.SetGetChoiceMessage
+import com.example.mobilevisualprogramming.blocks.*
+import com.example.mobilevisualprogramming.blocks.messages.*
 import com.example.mobilevisualprogramming.blocks.getandset.GetVarBlock
 import com.example.mobilevisualprogramming.blocks.getandset.SetVarBlock
 import kotlinx.coroutines.CoroutineScope
@@ -66,7 +65,7 @@ class MainActivity : ComponentActivity() {
                                 position = dragOffset.value
                             )
                             val block = if (isGet) GetVarBlock(newVariable)
-                            else SetVarBlock(newVariable)
+                            else SetVarBlock(newVariable, variableList.associate { it.name to it.value })
                             placedBlocks.add(block)
                         }
                         showSetGetDialog.value = false
