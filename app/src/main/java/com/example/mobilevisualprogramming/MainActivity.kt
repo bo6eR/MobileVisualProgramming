@@ -26,6 +26,7 @@ import androidx.compose.ui.zIndex
 import com.example.mobilevisualprogramming.main.VariableData
 import com.example.mobilevisualprogramming.blocks.*
 import com.example.mobilevisualprogramming.blocks.messages.*
+import com.example.mobilevisualprogramming.blocks.operators.*
 import com.example.mobilevisualprogramming.blocks.getandset.GetVarBlock
 import com.example.mobilevisualprogramming.blocks.getandset.SetVarBlock
 import kotlinx.coroutines.CoroutineScope
@@ -38,17 +39,26 @@ class MainActivity : ComponentActivity() {
         setContent {
             MaterialTheme {
                 var variableList by remember { mutableStateOf(listOf<VariableData>()) }
-                val placedBlocks = remember { mutableStateListOf<VarBlock>() }
+                val placedBlocks = remember { mutableStateListOf<Block>() }
 
                 val draggingVar = remember { mutableStateOf<VariableData?>(null) }
                 val dragOffset = remember { mutableStateOf(Offset.Zero) }
 
-                val drawerState = rememberDrawerState(DrawerValue.Closed)
+                val variablesDrawerState = rememberDrawerState(DrawerValue.Closed)
+                val operatorsDrawerState = rememberDrawerState(DrawerValue.Closed)
                 val scope = rememberCoroutineScope()
 
                 val showAddDialog = remember { mutableStateOf(false) }
                 val showSetGetDialog = remember { mutableStateOf(false) }
                 val chosenVariableTemp = remember { mutableStateOf<VariableData?>(null) }
+
+                // Список операторов
+                val operatorsList = listOf(
+                    "+" to { vars: Map<String, Int> -> AdditionBlock(vars) },
+                    "-" to { vars: Map<String, Int> -> SubtractionBlock(vars) },
+                    "*" to { vars: Map<String, Int> -> MultiplicationBlock(vars) },
+                    "/" to { vars: Map<String, Int> -> DivisionBlock(vars) }
+                )
 
                 AddVariableDialog(show = showAddDialog.value, onAdd = { variableList = variableList + it }, onDismiss = { showAddDialog.value = false })
 
@@ -69,24 +79,57 @@ class MainActivity : ComponentActivity() {
                     }
                 )
 
-                ModalNavigationDrawer(drawerState = drawerState,
+                ModalNavigationDrawer(
+                    drawerState = variablesDrawerState,
                     drawerContent = {
                         ModalDrawerSheet(
                             modifier = Modifier.width(300.dp),
                             drawerContainerColor = Color.DarkGray
                         ) {
-                            DrawerMenuContent(variableList = variableList, showAddDialog = showAddDialog, draggingVar = draggingVar, dragOffset = dragOffset,
+                            DrawerMenuContent(
+                                variableList = variableList,
+                                showAddDialog = showAddDialog,
+                                draggingVar = draggingVar,
+                                dragOffset = dragOffset,
                                 onVarDropped = { variable ->
                                     chosenVariableTemp.value = variable
                                     showSetGetDialog.value = true
                                 },
-                                drawerState = drawerState,
+                                drawerState = variablesDrawerState,
                                 scope = scope
                             )
                         }
                     }
                 ) {
-                    MainPage(placedBlocks = placedBlocks, drawerState = drawerState, scope = scope, draggingVar = draggingVar, dragOffset = dragOffset)
+                    ModalNavigationDrawer(
+                        drawerState = operatorsDrawerState,
+                        drawerContent = {
+                            ModalDrawerSheet(
+                                modifier = Modifier.width(250.dp),
+                                drawerContainerColor = Color(0xFFE0E0E0)
+                            ) {
+                                OperatorsMenuContent(
+                                    operatorsList = operatorsList,
+                                    onOperatorSelected = { creator ->
+                                        val vars = variableList
+                                            .associate { it.name to it.value }
+                                        val operator = creator(vars)
+                                        placedBlocks.add(operator)
+                                    }
+                                )
+                            }
+                        },
+                        gesturesEnabled = operatorsDrawerState.isOpen
+                    ) {
+                        MainPage(
+                            placedBlocks = placedBlocks,
+                            variablesDrawerState = variablesDrawerState,
+                            operatorsDrawerState = operatorsDrawerState,
+                            scope = scope,
+                            draggingVar = draggingVar,
+                            dragOffset = dragOffset
+                        )
+                    }
                 }
             }
         }
@@ -94,9 +137,41 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
+fun OperatorsMenuContent(
+    operatorsList: List<Pair<String, (Map<String, Int>) -> OperatorBlock>>,
+    onOperatorSelected: ((Map<String, Int>) -> OperatorBlock) -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "Операторы",
+            fontSize = 24.sp,
+            modifier = Modifier.padding(16.dp)
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        operatorsList.forEach { (symbol, creator) ->
+            Button(
+                onClick = { onOperatorSelected(creator) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .height(50.dp)
+            ) {
+                Text(symbol, fontSize = 24.sp)
+            }
+        }
+    }
+}
+
+@Composable
 fun MainPage(
-    placedBlocks: List<VarBlock>,
-    drawerState: DrawerState,
+    placedBlocks: List<Block>,
+    variablesDrawerState: DrawerState,
+    operatorsDrawerState: DrawerState,
     scope: CoroutineScope,
     draggingVar: MutableState<VariableData?>,
     dragOffset: MutableState<Offset>
@@ -135,7 +210,10 @@ fun MainPage(
                         }
                     }
             ) {
-                block.Render()
+                when (block) {
+                    is OperatorBlock -> block.Render()
+                    else -> block.Render()
+                }
             }
         }
 
@@ -159,8 +237,27 @@ fun MainPage(
             }
         }
     }
-    Box(modifier = Modifier.fillMaxSize()){
-        ButtonOfMenuOpening(scope, drawerState)
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        ButtonOfMenuOpening(scope, variablesDrawerState)
+        ButtonOfOperatorsOpening(scope, operatorsDrawerState)
+    }
+}
+
+@Composable
+fun BoxScope.ButtonOfOperatorsOpening(scope: CoroutineScope, operatorsDrawerState: DrawerState) {
+    Button(
+        onClick = {
+            scope.launch {
+                if (operatorsDrawerState.isClosed) operatorsDrawerState.open()
+                else operatorsDrawerState.close()
+            }
+        },
+        modifier = Modifier
+            .align(Alignment.BottomStart)
+            .padding(start = 10.dp, bottom = 40.dp),
+    ) {
+        Text("Operators", fontSize = 20.sp)
     }
 }
 

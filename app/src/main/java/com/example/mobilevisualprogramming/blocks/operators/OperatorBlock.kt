@@ -1,24 +1,25 @@
 package com.example.mobilevisualprogramming.blocks.operators
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.example.mobilevisualprogramming.blocks.VarBlock
+import com.example.mobilevisualprogramming.blocks.Block
+import com.example.mobilevisualprogramming.blocks.VisualBlock
 import com.example.mobilevisualprogramming.main.VariableData
 import java.util.*
 
 abstract class OperatorBlock(
-    override val variable: VariableData,
     private val availableVariables: Map<String, Int>
-) : VarBlock(variable) {
-    var expression by mutableStateOf("")
-    var error by mutableStateOf("")
+) : Block(variable = VariableData("")) {
+    var targetVarName by mutableStateOf("") // Название переменной для изменения
+    var expression by mutableStateOf("")    // Выражение для операции
+    var error by mutableStateOf("")         // Сообщение об ошибке
 
-    fun isBracketsValid(s: String): Boolean {
+    // Проверка скобок
+    protected fun isBracketsValid(s: String): Boolean {
         var balance = 0
         for (char in s) {
             when (char) {
@@ -32,18 +33,30 @@ abstract class OperatorBlock(
         return balance == 0
     }
 
-    protected fun evaluateExpression(expr: String): Int {
-        val replaced = Regex("[a-zA-Z_]\\w*").replace(expr) {
-            val name = it.value
-            availableVariables[name]?.toString() ?: throw IllegalArgumentException("Переменная \"$name\" не объявлена")
+    // Вычисление выражения
+    protected fun evaluateExpression(): Int {
+        // Объединяем targetVarName и выражение в одну формулу
+        val fullExpression = when (this) {
+            is AdditionBlock -> "$targetVarName + ($expression)"
+            is SubtractionBlock -> "$targetVarName - ($expression)"
+            is MultiplicationBlock -> "$targetVarName * ($expression)"
+            is DivisionBlock -> "$targetVarName / ($expression)"
+            else -> throw IllegalStateException("Unknown operator type")
         }
 
+        // Заменяем переменные на значения
+        val replaced = Regex("[a-zA-Z_]\\w*").replace(fullExpression) {
+            availableVariables[it.value]?.toString()
+                ?: throw IllegalArgumentException("Переменная '${it.value}' не найдена")
+        }
+
+        // Проверка на недопустимые символы
         if (Regex("[^0-9+\\-*/%().\\s]").containsMatchIn(replaced)) {
             throw IllegalArgumentException("Недопустимые символы в выражении")
         }
 
-        val rpn = toRPN(replaced)
-        return evalRPN(rpn)
+        // Конвертируем в ОПН и вычисляем
+        return evaluateRPN(toRPN(replaced))
     }
 
     private fun toRPN(expr: String): List<String> {
@@ -76,15 +89,13 @@ abstract class OperatorBlock(
         return output
     }
 
-    private fun precedence(op: String): Int {
-        return when (op) {
-            "+", "-" -> 1
-            "*", "/", "%" -> 2
-            else -> 0
-        }
+    private fun precedence(op: String): Int = when (op) {
+        "+", "-" -> 1
+        "*", "/", "%" -> 2
+        else -> 0
     }
 
-    private fun evalRPN(rpn: List<String>): Int {
+    private fun evaluateRPN(rpn: List<String>): Int {
         val stack = Stack<Int>()
         for (token in rpn) {
             when {
@@ -100,20 +111,49 @@ abstract class OperatorBlock(
     }
 
     protected abstract fun applyOperation(a: Int, b: Int, op: String): Int
-    abstract fun execute()
+    abstract fun execute(): Boolean
 
     @Composable
-    override fun RenderContent() {
-        Column(modifier = Modifier.padding(8.dp)) {
-            Text("Операция для: ${variable.name}")
-            TextField(
-                value = expression,
-                onValueChange = { expression = it },
-                placeholder = { Text("Введите выражение") }
-            )
-            if (error.isNotEmpty()) {
-                Text(text = error, color = Color.Red)
+    override fun Render() {
+        VisualBlock(
+            title = getOperatorTitle(),
+            modifier = Modifier.padding(8.dp)
+        ) {
+            Column(modifier = Modifier.padding(8.dp)) {
+                Text("Целевая переменная:")
+                TextField(
+                    value = targetVarName,
+                    onValueChange = { targetVarName = it },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text("Выражение:")
+                TextField(
+                    value = expression,
+                    onValueChange = { expression = it },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                if (error.isNotEmpty()) {
+                    Text(text = error, color = Color.Red)
+                }
             }
+        }.Render()
+    }
+
+    protected fun validateInputs() {
+        if (targetVarName.isBlank()) {
+            throw IllegalArgumentException("Введите название переменной")
+        }
+        if (expression.isBlank()) {
+            throw IllegalArgumentException("Введите выражение")
+        }
+        if (!isBracketsValid(expression)) {
+            throw IllegalArgumentException("Несбалансированные скобки")
         }
     }
+
+    protected abstract fun getOperatorTitle(): String
 }

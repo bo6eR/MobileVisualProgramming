@@ -8,14 +8,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.mobilevisualprogramming.main.VariableData
 
-open class VarBlock(open val variable: VariableData) {
+open class VarBlock(override val variable: VariableData) : Block(variable) {
     @Composable
     open fun RenderContent() {
         Text("Значение: ${variable.value}", style = MaterialTheme.typography.bodyMedium)
     }
 
     @Composable
-    fun Render()
+    override fun Render()
     {
         VisualBlock(
             title = "Variable: ${variable.name}",
