@@ -15,11 +15,11 @@ open class VarBlock(override val variable: VariableData) : Block(variable) {
     }
 
     @Composable
-    override fun Render()
-    {
+    override fun Render() {
         VisualBlock(
             title = "Variable: ${variable.name}",
-            modifier = Modifier.padding(8.dp)
+            modifier = Modifier.padding(8.dp),
+            blockId = id
         ) {
             RenderContent()
         }.Render()

@@ -117,7 +117,8 @@ abstract class OperatorBlock(
     override fun Render() {
         VisualBlock(
             title = getOperatorTitle(),
-            modifier = Modifier.padding(8.dp)
+            modifier = Modifier.padding(8.dp),
+            blockId = id
         ) {
             Column(modifier = Modifier.padding(8.dp)) {
                 Text("Целевая переменная:")

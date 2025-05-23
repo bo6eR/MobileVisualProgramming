@@ -40,6 +40,7 @@ class MainActivity : ComponentActivity() {
             MaterialTheme {
                 var variableList by remember { mutableStateOf(listOf<VariableData>()) }
                 val placedBlocks = remember { mutableStateListOf<Block>() }
+                var nextBlockId by remember { mutableStateOf(1) }
 
                 val draggingVar = remember { mutableStateOf<VariableData?>(null) }
                 val dragOffset = remember { mutableStateOf(Offset.Zero) }
@@ -51,6 +52,19 @@ class MainActivity : ComponentActivity() {
                 val showAddDialog = remember { mutableStateOf(false) }
                 val showSetGetDialog = remember { mutableStateOf(false) }
                 val chosenVariableTemp = remember { mutableStateOf<VariableData?>(null) }
+
+                // Функция для обновления ID блоков по их X-позиции
+                fun updateBlockIdsByPosition()
+                {
+                    // Сортируем блоки по X-координате
+                    val sortedBlocks = placedBlocks.sortedBy { it.variable.position.x }
+                    // Назначаем новые ID по порядку
+                    sortedBlocks.forEachIndexed { index, block ->
+                        block.id = index + 1
+                    }
+                    // Обновляем nextBlockId
+                    nextBlockId = placedBlocks.size + 1
+                }
 
                 // Список операторов
                 val operatorsList = listOf(
@@ -72,7 +86,9 @@ class MainActivity : ComponentActivity() {
                             )
                             val block = if (isGet) GetVarBlock(newVariable)
                             else SetVarBlock(newVariable, variableList.associate { it.name to it.value })
+                            block.id = nextBlockId++
                             placedBlocks.add(block)
+                            updateBlockIdsByPosition() // Обновляем ID при добавлении нового блока
                         }
                         showSetGetDialog.value = false
                         chosenVariableTemp.value = null
@@ -114,7 +130,9 @@ class MainActivity : ComponentActivity() {
                                         val vars = variableList
                                             .associate { it.name to it.value }
                                         val operator = creator(vars)
+                                        operator.id = nextBlockId++
                                         placedBlocks.add(operator)
+                                        updateBlockIdsByPosition() // Обновляем ID при добавлении нового блока
                                     }
                                 )
                             }
@@ -127,41 +145,11 @@ class MainActivity : ComponentActivity() {
                             operatorsDrawerState = operatorsDrawerState,
                             scope = scope,
                             draggingVar = draggingVar,
-                            dragOffset = dragOffset
+                            dragOffset = dragOffset,
+                            onBlockPositionChanged = { updateBlockIdsByPosition() } // Обновляем ID при изменении позиции
                         )
                     }
                 }
-            }
-        }
-    }
-}
-
-@Composable
-fun OperatorsMenuContent(
-    operatorsList: List<Pair<String, (Map<String, Int>) -> OperatorBlock>>,
-    onOperatorSelected: ((Map<String, Int>) -> OperatorBlock) -> Unit
-) {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = "Операторы",
-            fontSize = 24.sp,
-            modifier = Modifier.padding(16.dp)
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        operatorsList.forEach { (symbol, creator) ->
-            Button(
-                onClick = { onOperatorSelected(creator) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                    .height(50.dp)
-            ) {
-                Text(symbol, fontSize = 24.sp)
             }
         }
     }
@@ -174,7 +162,8 @@ fun MainPage(
     operatorsDrawerState: DrawerState,
     scope: CoroutineScope,
     draggingVar: MutableState<VariableData?>,
-    dragOffset: MutableState<Offset>
+    dragOffset: MutableState<Offset>,
+    onBlockPositionChanged: () -> Unit // Коллбек при изменении позиции блока
 ) {
     var scale by remember { mutableStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
@@ -204,10 +193,15 @@ fun MainPage(
                         )
                     }
                     .pointerInput(Unit) {
-                        detectDragGestures { change, dragAmount ->
-                            change.consume()
-                            block.variable.position += dragAmount / scale
-                        }
+                        detectDragGestures(
+                            onDrag = { change, dragAmount ->
+                                change.consume()
+                                block.variable.position += dragAmount / scale
+                            },
+                            onDragEnd = {
+                                onBlockPositionChanged()
+                            }
+                        )
                     }
             ) {
                 when (block) {
@@ -241,6 +235,37 @@ fun MainPage(
     Box(modifier = Modifier.fillMaxSize()) {
         ButtonOfMenuOpening(scope, variablesDrawerState)
         ButtonOfOperatorsOpening(scope, operatorsDrawerState)
+    }
+}
+
+@Composable
+fun OperatorsMenuContent(
+    operatorsList: List<Pair<String, (Map<String, Int>) -> OperatorBlock>>,
+    onOperatorSelected: ((Map<String, Int>) -> OperatorBlock) -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "Операторы",
+            fontSize = 24.sp,
+            modifier = Modifier.padding(16.dp)
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        operatorsList.forEach { (symbol, creator) ->
+            Button(
+                onClick = { onOperatorSelected(creator) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .height(50.dp)
+            ) {
+                Text(symbol, fontSize = 24.sp)
+            }
+        }
     }
 }
 
