@@ -24,4 +24,5 @@ open class VarBlock(override val variable: VariableData) : Block(variable) {
             RenderContent()
         }.Render()
     }
+
 }

@@ -10,5 +10,4 @@ abstract class Block(open val variable: VariableData)
 
     @Composable
     abstract fun Render()
-
 }

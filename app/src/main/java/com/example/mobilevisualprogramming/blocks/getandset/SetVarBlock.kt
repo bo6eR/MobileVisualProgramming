@@ -15,7 +15,7 @@ import java.util.*
 
 class SetVarBlock(
     override val variable: VariableData,
-    private val availableVariables: Map<String, Int> // {"a" → 5, "b" → 10}
+    var availableVariables: List<VariableData>  // {"a" → 5, "b" → 10}
 ) : VarBlock(variable) {
     var expression by mutableStateOf("")  // Введённое выражение
     var error by mutableStateOf("")       // Ошибка (если есть)
@@ -37,10 +37,10 @@ class SetVarBlock(
         return balance == 0
     }
 
-    fun evaluateExpression(expr: String, vars: Map<String, Int>): Int {
+    fun evaluateExpression(expr: String, vars: List<VariableData>): Int {
         val replaced = Regex("[a-zA-Z_]\\w*").replace(expr) {
             val name = it.value
-            vars[name]?.toString() ?: throw IllegalArgumentException("Переменная \"$name\" не объявлена")
+            vars.find { it.name == name }?.toString() ?: throw IllegalArgumentException("Переменная \"$name\" не объявлена")
         }
 
         if (Regex("[^0-9+\\-*/%().\\s]").containsMatchIn(replaced)) {
@@ -132,7 +132,7 @@ class SetVarBlock(
             TextField(
                 value = expression,
                 onValueChange = { expression = it },
-                placeholder = { Text("Например: (a + b) * 2") }
+                placeholder = { Text("") }
             )
             if (error.isNotEmpty()) {
                 Text(text = error, color = Color.Red)

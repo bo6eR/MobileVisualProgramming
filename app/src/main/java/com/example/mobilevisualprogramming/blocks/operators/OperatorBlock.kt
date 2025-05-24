@@ -12,7 +12,7 @@ import com.example.mobilevisualprogramming.main.VariableData
 import java.util.*
 
 abstract class OperatorBlock(
-    private val availableVariables: Map<String, Int>
+    var availableVariables: List<VariableData>
 ) : Block(variable = VariableData("")) {
     var targetVarName by mutableStateOf("") // Название переменной для изменения
     var expression by mutableStateOf("")    // Выражение для операции
@@ -46,7 +46,7 @@ abstract class OperatorBlock(
 
         // Заменяем переменные на значения
         val replaced = Regex("[a-zA-Z_]\\w*").replace(fullExpression) {
-            availableVariables[it.value]?.toString()
+            availableVariables.find { variable -> variable.name == it.value }?.value?.toString()
                 ?: throw IllegalArgumentException("Переменная '${it.value}' не найдена")
         }
 
@@ -111,7 +111,27 @@ abstract class OperatorBlock(
     }
 
     protected abstract fun applyOperation(a: Int, b: Int, op: String): Int
-    abstract fun execute(): Boolean
+
+    fun execute(): Boolean {
+        error = ""
+        return try {
+            validateInputs()
+            val result = evaluateExpression()
+
+            // Находим переменную по имени и обновляем ее значение
+            val targetVariable = availableVariables.find { it.name == targetVarName }
+            if (targetVariable != null) {
+                targetVariable.value = result
+                true
+            } else {
+                error = "Ошибка: Переменная '$targetVarName' не найдена"
+                false
+            }
+        } catch (e: Exception) {
+            error = "Ошибка: ${e.message}"
+            false
+        }
+    }
 
     @Composable
     override fun Render() {
@@ -121,7 +141,7 @@ abstract class OperatorBlock(
             blockId = id
         ) {
             Column(modifier = Modifier.padding(8.dp)) {
-                Text("Целевая переменная:")
+                Text("Переменная:")
                 TextField(
                     value = targetVarName,
                     onValueChange = { targetVarName = it },

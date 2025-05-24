@@ -29,6 +29,7 @@ import com.example.mobilevisualprogramming.blocks.messages.*
 import com.example.mobilevisualprogramming.blocks.operators.*
 import com.example.mobilevisualprogramming.blocks.getandset.GetVarBlock
 import com.example.mobilevisualprogramming.blocks.getandset.SetVarBlock
+import com.example.mobilevisualprogramming.blocks.operations.PrintValueBlock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -66,15 +67,20 @@ class MainActivity : ComponentActivity() {
                     nextBlockId = placedBlocks.size + 1
                 }
 
-                // Список операторов
                 val operatorsList = listOf(
-                    "+" to { vars: Map<String, Int> -> AdditionBlock(vars) },
-                    "-" to { vars: Map<String, Int> -> SubtractionBlock(vars) },
-                    "*" to { vars: Map<String, Int> -> MultiplicationBlock(vars) },
-                    "/" to { vars: Map<String, Int> -> DivisionBlock(vars) }
+                    "+" to { vars: List<VariableData> -> AdditionBlock(vars) },
+                    "-" to { vars: List<VariableData> -> SubtractionBlock(vars) },
+                    "*" to { vars: List<VariableData> -> MultiplicationBlock(vars) },
+                    "/" to { vars: List<VariableData> -> DivisionBlock(vars) },
                 )
 
-                AddVariableDialog(show = showAddDialog.value, onAdd = { variableList = variableList + it }, onDismiss = { showAddDialog.value = false })
+                AddVariableDialog(show = showAddDialog.value, onAdd = {
+                    variableList = variableList + it
+                    placedBlocks.forEach { block ->
+                        if (block is OperatorBlock) {
+                            block.availableVariables = variableList
+                        }
+                    } }, onDismiss = { showAddDialog.value = false })
 
                 SetGetChoiceMessage(show = showSetGetDialog,
                     onChoice = { isGet ->
@@ -85,10 +91,10 @@ class MainActivity : ComponentActivity() {
                                 position = dragOffset.value
                             )
                             val block = if (isGet) GetVarBlock(newVariable)
-                            else SetVarBlock(newVariable, variableList.associate { it.name to it.value })
+                            else SetVarBlock(newVariable, variableList)
                             block.id = nextBlockId++
                             placedBlocks.add(block)
-                            updateBlockIdsByPosition() // Обновляем ID при добавлении нового блока
+                            updateBlockIdsByPosition()
                         }
                         showSetGetDialog.value = false
                         chosenVariableTemp.value = null
@@ -127,12 +133,10 @@ class MainActivity : ComponentActivity() {
                                 OperatorsMenuContent(
                                     operatorsList = operatorsList,
                                     onOperatorSelected = { creator ->
-                                        val vars = variableList
-                                            .associate { it.name to it.value }
-                                        val operator = creator(vars)
+                                        val operator = creator(variableList)
                                         operator.id = nextBlockId++
                                         placedBlocks.add(operator)
-                                        updateBlockIdsByPosition() // Обновляем ID при добавлении нового блока
+                                        updateBlockIdsByPosition()
                                     }
                                 )
                             }
@@ -163,7 +167,7 @@ fun MainPage(
     scope: CoroutineScope,
     draggingVar: MutableState<VariableData?>,
     dragOffset: MutableState<Offset>,
-    onBlockPositionChanged: () -> Unit // Коллбек при изменении позиции блока
+    onBlockPositionChanged: () -> Unit
 ) {
     var scale by remember { mutableStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
@@ -235,13 +239,34 @@ fun MainPage(
     Box(modifier = Modifier.fillMaxSize()) {
         ButtonOfMenuOpening(scope, variablesDrawerState)
         ButtonOfOperatorsOpening(scope, operatorsDrawerState)
+
+        // Добавляем кнопку Start
+        Button(
+            onClick = {
+                // Сортируем блоки по ID и выполняем их
+                val sortedBlocks = placedBlocks.sortedBy { it.id }
+                sortedBlocks.forEach { block ->
+                    when (block) {
+                        is OperatorBlock -> block.execute()
+                        is SetVarBlock -> block.execute()
+                        is PrintValueBlock -> block.execute()
+                    }
+                }
+            },
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = 16.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Green)
+        ) {
+            Text("Start", fontSize = 20.sp)
+        }
     }
 }
 
 @Composable
 fun OperatorsMenuContent(
-    operatorsList: List<Pair<String, (Map<String, Int>) -> OperatorBlock>>,
-    onOperatorSelected: ((Map<String, Int>) -> OperatorBlock) -> Unit
+    operatorsList: List<Pair<String, (List<VariableData>) -> OperatorBlock>>,
+    onOperatorSelected: ((List<VariableData>) -> OperatorBlock) -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxSize(),
