@@ -34,13 +34,13 @@ fun SetGetChoiceMessage(
                         modifier = androidx.compose.ui.Modifier.fillMaxWidth()
                     ) {
                         Button(onClick = {
-                            onChoice(true) // Get
+                            onChoice(true)
                             show.value = false
                         }) {
                             Text("Get")
                         }
                         Button(onClick = {
-                            onChoice(false) // Set
+                            onChoice(false)
                             show.value = false
                         }) {
                             Text("Set")

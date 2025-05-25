@@ -8,9 +8,13 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -40,33 +44,18 @@ class MainActivity : ComponentActivity() {
             MaterialTheme {
                 var variableList by remember { mutableStateOf(listOf<VariableData>()) }
                 val placedBlocks = remember { mutableStateListOf<Block>() }
-                var nextBlockId by remember { mutableStateOf(1) }
+                var nextBlockId by remember { mutableIntStateOf(1) }
 
                 val draggingVar = remember { mutableStateOf<VariableData?>(null) }
                 val dragOffset = remember { mutableStateOf(Offset.Zero) }
 
                 val variablesDrawerState = rememberDrawerState(DrawerValue.Closed)
-                val operatorsDrawerState = rememberDrawerState(DrawerValue.Closed)
                 val scope = rememberCoroutineScope()
 
                 val showAddDialog = remember { mutableStateOf(false) }
                 val showSetGetDialog = remember { mutableStateOf(false) }
                 val chosenVariableTemp = remember { mutableStateOf<VariableData?>(null) }
 
-                // Функция для обновления ID блоков по их X-позиции
-                fun updateBlockIdsByPosition()
-                {
-                    // Сортируем блоки по X-координате
-                    val sortedBlocks = placedBlocks.sortedBy { it.variable.position.x }
-                    // Назначаем новые ID по порядку
-                    sortedBlocks.forEachIndexed { index, block ->
-                        block.id = index + 1
-                    }
-                    // Обновляем nextBlockId
-                    nextBlockId = placedBlocks.size + 1
-                }
-
-                // Список операторов
                 val operatorsList = listOf(
                     "+" to { vars: Map<String, Int> -> AdditionBlock(vars) },
                     "-" to { vars: Map<String, Int> -> SubtractionBlock(vars) },
@@ -86,9 +75,9 @@ class MainActivity : ComponentActivity() {
                             )
                             val block = if (isGet) GetVarBlock(newVariable)
                             else SetVarBlock(newVariable, variableList.associate { it.name to it.value })
-                            block.id = nextBlockId++
+                            block.id = nextBlockId+1
                             placedBlocks.add(block)
-                            updateBlockIdsByPosition() // Обновляем ID при добавлении нового блока
+                            nextBlockId =  updateBlockIdsByPosition(placedBlocks)
                         }
                         showSetGetDialog.value = false
                         chosenVariableTemp.value = null
@@ -103,6 +92,9 @@ class MainActivity : ComponentActivity() {
                             drawerContainerColor = Color.DarkGray
                         ) {
                             DrawerMenuContent(
+                                nextBlockId = nextBlockId,
+                                placedBlocks = placedBlocks,
+                                operatorsList = operatorsList,
                                 variableList = variableList,
                                 showAddDialog = showAddDialog,
                                 draggingVar = draggingVar,
@@ -117,38 +109,16 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 ) {
-                    ModalNavigationDrawer(
-                        drawerState = operatorsDrawerState,
-                        drawerContent = {
-                            ModalDrawerSheet(
-                                modifier = Modifier.width(250.dp),
-                                drawerContainerColor = Color(0xFFE0E0E0)
-                            ) {
-                                OperatorsMenuContent(
-                                    operatorsList = operatorsList,
-                                    onOperatorSelected = { creator ->
-                                        val vars = variableList
-                                            .associate { it.name to it.value }
-                                        val operator = creator(vars)
-                                        operator.id = nextBlockId++
-                                        placedBlocks.add(operator)
-                                        updateBlockIdsByPosition() // Обновляем ID при добавлении нового блока
-                                    }
-                                )
-                            }
-                        },
-                        gesturesEnabled = operatorsDrawerState.isOpen
-                    ) {
-                        MainPage(
-                            placedBlocks = placedBlocks,
-                            variablesDrawerState = variablesDrawerState,
-                            operatorsDrawerState = operatorsDrawerState,
-                            scope = scope,
-                            draggingVar = draggingVar,
-                            dragOffset = dragOffset,
-                            onBlockPositionChanged = { updateBlockIdsByPosition() } // Обновляем ID при изменении позиции
-                        )
-                    }
+
+                    MainPage(
+                        placedBlocks = placedBlocks,
+                        variablesDrawerState = variablesDrawerState,
+                        scope = scope,
+                        draggingVar = draggingVar,
+                        dragOffset = dragOffset,
+                        onBlockPositionChanged = { nextBlockId = updateBlockIdsByPosition(placedBlocks) }
+                    )
+
                 }
             }
         }
@@ -159,20 +129,19 @@ class MainActivity : ComponentActivity() {
 fun MainPage(
     placedBlocks: List<Block>,
     variablesDrawerState: DrawerState,
-    operatorsDrawerState: DrawerState,
     scope: CoroutineScope,
     draggingVar: MutableState<VariableData?>,
     dragOffset: MutableState<Offset>,
-    onBlockPositionChanged: () -> Unit // Коллбек при изменении позиции блока
+    onBlockPositionChanged: () -> Unit
 ) {
-    var scale by remember { mutableStateOf(1f) }
+    var scale by remember { mutableFloatStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
 
     Box(modifier = Modifier
         .fillMaxSize()
         .transformable(
             state = rememberTransformableState { zoomChange, panChange, _ ->
-                scale = (scale * zoomChange).coerceIn(0.5f, 3f)
+                scale = (scale * zoomChange).coerceIn(0.2f, 2f)
                 offset += panChange
             }
         )
@@ -186,7 +155,7 @@ fun MainPage(
         placedBlocks.forEach { block ->
             Box(
                 modifier = Modifier
-                    .offset {
+                    .absoluteOffset  {
                         IntOffset(
                             block.variable.position.x.roundToInt(),
                             block.variable.position.y.roundToInt()
@@ -196,7 +165,7 @@ fun MainPage(
                         detectDragGestures(
                             onDrag = { change, dragAmount ->
                                 change.consume()
-                                block.variable.position += dragAmount / scale
+                                block.variable.position += dragAmount
                             },
                             onDragEnd = {
                                 onBlockPositionChanged()
@@ -204,10 +173,7 @@ fun MainPage(
                         )
                     }
             ) {
-                when (block) {
-                    is OperatorBlock -> block.Render()
-                    else -> block.Render()
-                }
+                block.Render()
             }
         }
 
@@ -225,8 +191,11 @@ fun MainPage(
                 Text(
                     text = variable.name,
                     modifier = Modifier
-                        .background(Color.LightGray, RoundedCornerShape(8.dp))
-                        .padding(8.dp)
+                        .padding(20.dp)
+                        .background(Color.LightGray, shape = RoundedCornerShape(12.dp))
+                        .width(100.dp),
+                    textAlign = TextAlign.Center,
+                    fontSize = 30.sp,
                 )
             }
         }
@@ -234,23 +203,24 @@ fun MainPage(
 
     Box(modifier = Modifier.fillMaxSize()) {
         ButtonOfMenuOpening(scope, variablesDrawerState)
-        ButtonOfOperatorsOpening(scope, operatorsDrawerState)
     }
 }
 
 @Composable
 fun OperatorsMenuContent(
     operatorsList: List<Pair<String, (Map<String, Int>) -> OperatorBlock>>,
-    onOperatorSelected: ((Map<String, Int>) -> OperatorBlock) -> Unit
+    onOperatorSelected: ((Map<String, Int>) -> OperatorBlock) -> Unit,
+    scope: CoroutineScope,
+    drawerState: DrawerState,
 ) {
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Операторы",
-            fontSize = 24.sp,
-            modifier = Modifier.padding(16.dp)
+            text = "Operators",
+            color = Color.White,
+            fontSize = 30.sp
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -269,22 +239,17 @@ fun OperatorsMenuContent(
     }
 }
 
-@Composable
-fun BoxScope.ButtonOfOperatorsOpening(scope: CoroutineScope, operatorsDrawerState: DrawerState) {
-    Button(
-        onClick = {
-            scope.launch {
-                if (operatorsDrawerState.isClosed) operatorsDrawerState.open()
-                else operatorsDrawerState.close()
-            }
-        },
-        modifier = Modifier
-            .align(Alignment.BottomStart)
-            .padding(start = 10.dp, bottom = 40.dp),
-    ) {
-        Text("Operators", fontSize = 20.sp)
+fun updateBlockIdsByPosition(
+    placedBlocks: SnapshotStateList<Block>
+) : Int
+{
+    val sortedBlocks = placedBlocks.sortedBy { it.variable.position.x }
+    sortedBlocks.forEachIndexed { index, block ->
+        block.id = index + 1
     }
+    return placedBlocks.size + 1
 }
+
 
 @Composable
 fun BoxScope.ButtonOfMenuOpening(scope: CoroutineScope, drawerState: DrawerState) {
@@ -302,6 +267,9 @@ fun BoxScope.ButtonOfMenuOpening(scope: CoroutineScope, drawerState: DrawerState
 
 @Composable
 fun DrawerMenuContent(
+    nextBlockId: Int,
+    placedBlocks: SnapshotStateList<Block>,
+    operatorsList: List<Pair<String, (Map<String, Int>) -> OperatorBlock>>,
     variableList: List<VariableData>,
     showAddDialog: MutableState<Boolean>,
     draggingVar: MutableState<VariableData?>,
@@ -310,11 +278,12 @@ fun DrawerMenuContent(
     drawerState: DrawerState,
     scope: CoroutineScope
 ) {
-    var widthOfVar by remember { mutableStateOf(0) }
-
+    var widthOfVar by remember { mutableIntStateOf(0) }
+    val scrollState = rememberScrollState()
     Column(
         modifier = Modifier
-            .fillMaxSize()
+            .fillMaxWidth()
+            .verticalScroll(scrollState)
             .onSizeChanged { size -> widthOfVar = size.width },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -322,7 +291,10 @@ fun DrawerMenuContent(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            Text("Variables", color = Color.White, fontSize = 30.sp)
+            Text(
+                text = "Variables",
+                color = Color.White,
+                fontSize = 30.sp)
             Button(
                 onClick = { showAddDialog.value = true },
                 modifier = Modifier.size(35.dp),
@@ -368,5 +340,24 @@ fun DrawerMenuContent(
                     }
             )
         }
+
+        Spacer(Modifier.height(16.dp))
+
+        OperatorsMenuContent(
+            operatorsList = operatorsList,
+            onOperatorSelected = { creator ->
+                val vars = variableList
+                    .associate { it.name to it.value }
+                val operator = creator(vars)
+                operator.id = nextBlockId+1
+                scope.launch { drawerState.close() }
+
+                placedBlocks.add(operator)
+                updateBlockIdsByPosition(placedBlocks = placedBlocks)
+            },
+            scope = scope,
+            drawerState = drawerState
+        )
+
     }
 }

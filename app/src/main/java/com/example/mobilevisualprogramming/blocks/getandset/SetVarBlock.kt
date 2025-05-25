@@ -8,7 +8,11 @@ import androidx.compose.ui.graphics.Color
 import com.example.mobilevisualprogramming.blocks.VarBlock
 import com.example.mobilevisualprogramming.main.VariableData
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import java.util.*
 
@@ -17,8 +21,8 @@ class SetVarBlock(
     override val variable: VariableData,
     private val availableVariables: Map<String, Int> // {"a" → 5, "b" → 10}
 ) : VarBlock(variable) {
-    var expression by mutableStateOf("")  // Введённое выражение
-    var error by mutableStateOf("")       // Ошибка (если есть)
+    var expression by mutableStateOf("")
+    var error by mutableStateOf("")
 
     private fun isBracketsValid(s: String): Boolean {
         var balance = 0
@@ -127,12 +131,14 @@ class SetVarBlock(
 
     @Composable
     override fun RenderContent() {
-        Column(modifier = Modifier.padding(8.dp)) {
-            Text("Присвоить: ${variable.name} = ")
+        Row(modifier = Modifier
+            .padding(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("${variable.name} = ")
             TextField(
                 value = expression,
-                onValueChange = { expression = it },
-                placeholder = { Text("Например: (a + b) * 2") }
+                onValueChange = { expression = it }
             )
             if (error.isNotEmpty()) {
                 Text(text = error, color = Color.Red)

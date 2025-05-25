@@ -1,15 +1,27 @@
 package com.example.mobilevisualprogramming.blocks.operators
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.mobilevisualprogramming.blocks.Block
+import com.example.mobilevisualprogramming.blocks.OperatorVisualBlock
 import com.example.mobilevisualprogramming.blocks.VisualBlock
 import com.example.mobilevisualprogramming.main.VariableData
 import java.util.*
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TextField
+import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.sp
+
 
 abstract class OperatorBlock(
     private val availableVariables: Map<String, Int>
@@ -113,28 +125,69 @@ abstract class OperatorBlock(
     protected abstract fun applyOperation(a: Int, b: Int, op: String): Int
     abstract fun execute(): Boolean
 
+    val blockBgColor = Color(0xFF6750A4)
+    val textFieldBgColor = Color(0xFF4B2267)
+    val placeholderColor = Color(0xFF6D6D6D)
+    val idColor = Color(0xFFFBE200)
+
     @Composable
     override fun Render() {
-        VisualBlock(
+        OperatorVisualBlock(
             title = getOperatorTitle(),
             modifier = Modifier.padding(8.dp),
             blockId = id
         ) {
-            Column(modifier = Modifier.padding(8.dp)) {
-                Text("Целевая переменная:")
+            Column(
+                modifier = Modifier.padding(8.dp),
+            ) {
+                Text(
+                    text = " Переменная:",
+                    color = Color.White
+                )
                 TextField(
                     value = targetVarName,
                     onValueChange = { targetVarName = it },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                        .padding(0.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true,
+                    colors = TextFieldDefaults.colors(
+                            Color.White,
+                            unfocusedTextColor = Color.White,
+                            focusedContainerColor = textFieldBgColor,
+                            unfocusedContainerColor = textFieldBgColor,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            disabledIndicatorColor = Color.Transparent
+                    )
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-                Text("Выражение:")
+                Text(
+                    text = " Выражение:",
+                    color = Color.White
+                )
                 TextField(
                     value = expression,
                     onValueChange = { expression = it },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                        .padding(0.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true,
+                    colors = TextFieldDefaults.colors(
+                        Color.White,
+                        unfocusedTextColor = Color.White,
+                        focusedContainerColor = textFieldBgColor,
+                        unfocusedContainerColor = textFieldBgColor,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        disabledIndicatorColor = Color.Transparent
+                    )
                 )
 
                 if (error.isNotEmpty()) {
