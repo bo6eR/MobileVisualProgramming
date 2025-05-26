@@ -7,14 +7,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.max
-import androidx.compose.ui.unit.min
+import androidx.compose.ui.unit.sp
 
-class VisualBlock(
+class VarVisualBlock(
     val title: String,
     val modifier: Modifier = Modifier,
     val blockId: Int = -1,
@@ -30,36 +30,37 @@ class VisualBlock(
         Surface(
             tonalElevation = 4.dp,
             shadowElevation = 4.dp,
+            shape = RoundedCornerShape(20.dp),
             modifier = modifier
-                .width(250.dp)
+                .width(350.dp)
                 .padding(4.dp)
         ) {
             Column(
                 modifier = Modifier
-                    .background(
-                        if (blockId > 0) Color(0xFFE0F7FA).copy(alpha = 0.7f)
-                        else Color(0xFFE0F7FA)
-                    )
+                    .background(color = blockBgColor)
                     .padding(8.dp)
             ) {
                 Row(
                     horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth().padding(start = 8.dp, end = 8.dp)
                 ) {
                     Text(
                         text = title,
+                        color = Color.White,
+                        fontSize = 21.sp,
+                        fontWeight = FontWeight.ExtraBold,
                         style = MaterialTheme.typography.titleSmall,
                         modifier = Modifier.padding(bottom = 4.dp)
                     )
                     if (blockId > 0) {
                         Text(
-                            text = "#$blockId",
+                            text = "$blockId",
+                            fontSize = 50.sp,
+                            fontWeight = FontWeight.ExtraBold,
                             style = MaterialTheme.typography.labelSmall,
 
-                            color = Color.Blue,
-                            modifier = Modifier
-                                .background(Color.White.copy(alpha = 0.7f), RoundedCornerShape(4.dp))
-                                .padding(horizontal = 4.dp)
+                            color = idColor
                         )
                     }
                 }

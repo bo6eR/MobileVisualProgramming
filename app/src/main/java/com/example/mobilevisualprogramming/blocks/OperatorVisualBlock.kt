@@ -34,7 +34,7 @@ class OperatorVisualBlock(
             shadowElevation = 4.dp,
             shape = RoundedCornerShape(20.dp),
             modifier = modifier
-                .width(200.dp).height(270.dp)
+                .width(250.dp).height(270.dp)
         ) {
             Column(
                 modifier = Modifier

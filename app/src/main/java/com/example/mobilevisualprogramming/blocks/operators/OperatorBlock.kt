@@ -1,6 +1,5 @@
 package com.example.mobilevisualprogramming.blocks.operators
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -10,17 +9,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.mobilevisualprogramming.blocks.Block
 import com.example.mobilevisualprogramming.blocks.OperatorVisualBlock
-import com.example.mobilevisualprogramming.blocks.VisualBlock
 import com.example.mobilevisualprogramming.main.VariableData
 import java.util.*
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TextField
-import androidx.compose.runtime.*
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.unit.sp
 
 
 abstract class OperatorBlock(

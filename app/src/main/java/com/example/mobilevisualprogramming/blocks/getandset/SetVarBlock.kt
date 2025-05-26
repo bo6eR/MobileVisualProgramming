@@ -11,11 +11,17 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import java.util.*
 
+val blockBgColor = Color(0xFF6750A4)
+val textFieldBgColor = Color(0xFF4B2267)
+val placeholderColor = Color(0xFF6D6D6D)
+val idColor = Color(0xFFFBE200)
 
 class SetVarBlock(
     override val variable: VariableData,
@@ -135,10 +141,25 @@ class SetVarBlock(
             .padding(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("${variable.name} = ")
+            Text(
+                text = "${variable.name} = ",
+                color = Color.White
+
+            )
             TextField(
                 value = expression,
-                onValueChange = { expression = it }
+                onValueChange = { expression = it },
+                shape = RoundedCornerShape(12.dp),
+                singleLine = true,
+                colors = TextFieldDefaults.colors(
+                    Color.White,
+                    unfocusedTextColor = Color.White,
+                    focusedContainerColor = textFieldBgColor,
+                    unfocusedContainerColor = textFieldBgColor,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    disabledIndicatorColor = Color.Transparent
+                )
             )
             if (error.isNotEmpty()) {
                 Text(text = error, color = Color.Red)
