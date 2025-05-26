@@ -7,20 +7,18 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.example.mobilevisualprogramming.blocks.Block
-import com.example.mobilevisualprogramming.blocks.OperatorVisualBlock
-import com.example.mobilevisualprogramming.main.VariableData
+import com.example.mobilevisualprogramming.blocks.render.OperatorVisualBlock
 import java.util.*
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TextField
+import com.example.mobilevisualprogramming.blocks.OperationBlock
 
 
 abstract class OperatorBlock(
     private val availableVariables: Map<String, Int>
-) : Block(variable = VariableData("")) {
-    var targetVarName by mutableStateOf("") // Название переменной для изменения
-    var expression by mutableStateOf("")    // Выражение для операции
-    var error by mutableStateOf("")         // Сообщение об ошибке
+) : OperationBlock(availableVariables) {
+    var targetVarName by mutableStateOf("")
+    var expression by mutableStateOf("")
 
     // Проверка скобок
     protected fun isBracketsValid(s: String): Boolean {
@@ -146,13 +144,13 @@ abstract class OperatorBlock(
                     shape = RoundedCornerShape(12.dp),
                     singleLine = true,
                     colors = TextFieldDefaults.colors(
-                            Color.White,
-                            unfocusedTextColor = Color.White,
-                            focusedContainerColor = textFieldBgColor,
-                            unfocusedContainerColor = textFieldBgColor,
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent,
-                            disabledIndicatorColor = Color.Transparent
+                        Color.White,
+                        unfocusedTextColor = Color.White,
+                        focusedContainerColor = textFieldBgColor,
+                        unfocusedContainerColor = textFieldBgColor,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        disabledIndicatorColor = Color.Transparent
                     )
                 )
 

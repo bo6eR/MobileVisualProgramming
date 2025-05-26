@@ -1,4 +1,4 @@
-package com.example.mobilevisualprogramming
+package com.example.mobilevisualprogramming.main
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -27,15 +27,17 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import com.example.mobilevisualprogramming.main.VariableData
 import com.example.mobilevisualprogramming.blocks.*
 import com.example.mobilevisualprogramming.blocks.messages.*
 import com.example.mobilevisualprogramming.blocks.operators.*
 import com.example.mobilevisualprogramming.blocks.getandset.GetVarBlock
 import com.example.mobilevisualprogramming.blocks.getandset.SetVarBlock
+import com.example.mobilevisualprogramming.blocks.operations.PrintValueBlock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
+import androidx.compose.ui.res.painterResource
+import com.example.mobilevisualprogramming.R
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -60,7 +62,8 @@ class MainActivity : ComponentActivity() {
                     "+" to { vars: Map<String, Int> -> AdditionBlock(vars) },
                     "-" to { vars: Map<String, Int> -> SubtractionBlock(vars) },
                     "*" to { vars: Map<String, Int> -> MultiplicationBlock(vars) },
-                    "/" to { vars: Map<String, Int> -> DivisionBlock(vars) }
+                    "/" to { vars: Map<String, Int> -> DivisionBlock(vars) },
+                    "Print" to { vars: Map<String, Int> -> PrintValueBlock(vars)}
                 )
 
                 AddVariableDialog(show = showAddDialog.value, onAdd = { variableList = variableList + it }, onDismiss = { showAddDialog.value = false })
@@ -204,12 +207,42 @@ fun MainPage(
     Box(modifier = Modifier.fillMaxSize()) {
         ButtonOfMenuOpening(scope, variablesDrawerState)
     }
+
+    // КНОПКА СТАРТ
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 16.dp),
+        contentAlignment = Alignment.TopCenter
+    ) {
+        FloatingActionButton(
+            onClick = {
+                placedBlocks
+                    .sortedBy { it.id }
+                    .forEach { block ->
+                        when (block) {
+                            is PrintValueBlock-> block.execute()
+                            is SetVarBlock -> block.execute()
+                            is OperatorBlock -> block.execute()
+                        }
+                    }
+            },
+            modifier = Modifier,
+            containerColor = Color(0xFF4CAF50), // Зеленый цвет
+            contentColor = Color.White
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_play),
+                contentDescription = "Start execution"
+            )
+        }
+    }
 }
 
 @Composable
 fun OperatorsMenuContent(
-    operatorsList: List<Pair<String, (Map<String, Int>) -> OperatorBlock>>,
-    onOperatorSelected: ((Map<String, Int>) -> OperatorBlock) -> Unit,
+    operatorsList: List<Pair<String, (Map<String, Int>) -> OperationBlock>>,
+    onOperatorSelected: ((Map<String, Int>) -> OperationBlock) -> Unit,
     scope: CoroutineScope,
     drawerState: DrawerState,
 ) {
@@ -269,7 +302,7 @@ fun BoxScope.ButtonOfMenuOpening(scope: CoroutineScope, drawerState: DrawerState
 fun DrawerMenuContent(
     nextBlockId: Int,
     placedBlocks: SnapshotStateList<Block>,
-    operatorsList: List<Pair<String, (Map<String, Int>) -> OperatorBlock>>,
+    operatorsList: List<Pair<String, (Map<String, Int>) -> OperationBlock>>,
     variableList: List<VariableData>,
     showAddDialog: MutableState<Boolean>,
     draggingVar: MutableState<VariableData?>,
