@@ -1,4 +1,4 @@
-package com.example.mobilevisualprogramming.main
+package com.example.mobilevisualprogramming
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -37,7 +37,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import androidx.compose.ui.res.painterResource
-import com.example.mobilevisualprogramming.R
+import com.example.mobilevisualprogramming.main.VariableData
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
