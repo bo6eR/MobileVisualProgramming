@@ -1,7 +1,9 @@
 package com.example.mobilevisualprogramming.blocks.operators
 
+import com.example.mobilevisualprogramming.main.VariableData
+
 class DivisionBlock(
-    availableVariables: Map<String, Int>
+    availableVariables: List<VariableData>
 ) : OperatorBlock(availableVariables) {
 
     override fun applyOperation(a: Int, b: Int, op: String): Int = when (op) {

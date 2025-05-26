@@ -59,14 +59,31 @@ class MainActivity : ComponentActivity() {
                 val chosenVariableTemp = remember { mutableStateOf<VariableData?>(null) }
 
                 val operatorsList = listOf(
-                    "+" to { vars: Map<String, Int> -> AdditionBlock(vars) },
-                    "-" to { vars: Map<String, Int> -> SubtractionBlock(vars) },
-                    "*" to { vars: Map<String, Int> -> MultiplicationBlock(vars) },
-                    "/" to { vars: Map<String, Int> -> DivisionBlock(vars) },
-                    "Print" to { vars: Map<String, Int> -> PrintValueBlock(vars)}
+                    "+" to { vars: List<VariableData> -> AdditionBlock(vars) },
+                    "-" to { vars: List<VariableData> -> SubtractionBlock(vars) },
+                    "*" to { vars: List<VariableData> -> MultiplicationBlock(vars) },
+                    "/" to { vars: List<VariableData> -> DivisionBlock(vars) },
+                    "Print" to { vars: List<VariableData> -> PrintValueBlock(vars)}
                 )
 
-                AddVariableDialog(show = showAddDialog.value, onAdd = { variableList = variableList + it }, onDismiss = { showAddDialog.value = false })
+                fun updateVariablesInBlocks(newVariables: List<VariableData>) {
+                    placedBlocks.forEach { block ->
+                        when (block) {
+                            is OperationBlock -> block.updateAvailableVariables(newVariables)
+                            is SetVarBlock -> block.updateAvailableVariables(newVariables)
+                        }
+                    }
+                }
+
+                AddVariableDialog(
+                    show = showAddDialog.value,
+                    onAdd = {
+                        val newList = variableList + it
+                        variableList = newList
+                        updateVariablesInBlocks(newList)
+                    },
+                    onDismiss = { showAddDialog.value = false }
+                )
 
                 SetGetChoiceMessage(show = showSetGetDialog,
                     onChoice = { isGet ->
@@ -77,7 +94,7 @@ class MainActivity : ComponentActivity() {
                                 position = dragOffset.value
                             )
                             val block = if (isGet) GetVarBlock(newVariable)
-                            else SetVarBlock(newVariable, variableList.associate { it.name to it.value })
+                            else SetVarBlock(newVariable, variableList)
                             block.id = nextBlockId+1
                             placedBlocks.add(block)
                             nextBlockId =  updateBlockIdsByPosition(placedBlocks)
@@ -241,8 +258,8 @@ fun MainPage(
 
 @Composable
 fun OperatorsMenuContent(
-    operatorsList: List<Pair<String, (Map<String, Int>) -> OperationBlock>>,
-    onOperatorSelected: ((Map<String, Int>) -> OperationBlock) -> Unit,
+    operatorsList: List<Pair<String, (List<VariableData>) -> OperationBlock>>,
+    onOperatorSelected: ((List<VariableData>) -> OperationBlock) -> Unit,
     scope: CoroutineScope,
     drawerState: DrawerState,
 ) {
@@ -302,7 +319,7 @@ fun BoxScope.ButtonOfMenuOpening(scope: CoroutineScope, drawerState: DrawerState
 fun DrawerMenuContent(
     nextBlockId: Int,
     placedBlocks: SnapshotStateList<Block>,
-    operatorsList: List<Pair<String, (Map<String, Int>) -> OperationBlock>>,
+    operatorsList: List<Pair<String, (List<VariableData>) -> OperationBlock>>,
     variableList: List<VariableData>,
     showAddDialog: MutableState<Boolean>,
     draggingVar: MutableState<VariableData?>,
@@ -380,7 +397,6 @@ fun DrawerMenuContent(
             operatorsList = operatorsList,
             onOperatorSelected = { creator ->
                 val vars = variableList
-                    .associate { it.name to it.value }
                 val operator = creator(vars)
                 operator.id = nextBlockId+1
                 scope.launch { drawerState.close() }

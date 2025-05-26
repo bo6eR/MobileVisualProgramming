@@ -6,7 +6,12 @@ import androidx.compose.runtime.setValue
 import com.example.mobilevisualprogramming.main.VariableData
 
 
-abstract class OperationBlock(private val availableVariables: Map<String, Int>) : Block(variable = VariableData(""))
+abstract class OperationBlock(protected open var availableVariables: List<VariableData>) : Block(variable = VariableData(""))
 {
     var error by mutableStateOf("")
+
+    // Добавляем метод для обновления переменных
+    fun updateAvailableVariables(newVariables: List<VariableData>) {
+        availableVariables = newVariables
+    }
 }

@@ -12,10 +12,11 @@ import java.util.*
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TextField
 import com.example.mobilevisualprogramming.blocks.OperationBlock
+import com.example.mobilevisualprogramming.main.VariableData
 
 
 abstract class OperatorBlock(
-    private val availableVariables: Map<String, Int>
+    override var availableVariables: List<VariableData>
 ) : OperationBlock(availableVariables) {
     var targetVarName by mutableStateOf("")
     var expression by mutableStateOf("")
@@ -48,7 +49,7 @@ abstract class OperatorBlock(
 
         // Заменяем переменные на значения
         val replaced = Regex("[a-zA-Z_]\\w*").replace(fullExpression) {
-            availableVariables[it.value]?.toString()
+            availableVariables.find { varData -> varData.name == it.value }?.value?.toString()
                 ?: throw IllegalArgumentException("Переменная '${it.value}' не найдена")
         }
 

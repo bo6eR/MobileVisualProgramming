@@ -18,17 +18,18 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import java.util.*
 
-val blockBgColor = Color(0xFF6750A4)
 val textFieldBgColor = Color(0xFF4B2267)
-val placeholderColor = Color(0xFF6D6D6D)
-val idColor = Color(0xFFFBE200)
 
 class SetVarBlock(
     override val variable: VariableData,
-    private val availableVariables: Map<String, Int> // {"a" → 5, "b" → 10}
+    private var availableVariables: List<VariableData>
 ) : VarBlock(variable) {
     var expression by mutableStateOf("")
     var error by mutableStateOf("")
+
+    fun updateAvailableVariables(newVariables: List<VariableData>) {
+        availableVariables = newVariables
+    }
 
     private fun isBracketsValid(s: String): Boolean {
         var balance = 0
@@ -47,10 +48,10 @@ class SetVarBlock(
         return balance == 0
     }
 
-    fun evaluateExpression(expr: String, vars: Map<String, Int>): Int {
+    fun evaluateExpression(expr: String, vars: List<VariableData>): Int {
         val replaced = Regex("[a-zA-Z_]\\w*").replace(expr) {
             val name = it.value
-            vars[name]?.toString() ?: throw IllegalArgumentException("Переменная \"$name\" не объявлена")
+            vars.find { it.name == name }?.toString() ?: throw IllegalArgumentException("Переменная \"$name\" не объявлена")
         }
 
         if (Regex("[^0-9+\\-*/%().\\s]").containsMatchIn(replaced)) {

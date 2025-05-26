@@ -12,8 +12,9 @@ import androidx.compose.ui.unit.dp
 import com.example.mobilevisualprogramming.blocks.OperationBlock
 import com.example.mobilevisualprogramming.blocks.render.OperatorVisualBlock
 import androidx.compose.foundation.shape.RoundedCornerShape
+import com.example.mobilevisualprogramming.main.VariableData
 
-class PrintValueBlock(private val availableVariables: Map<String, Int>) : OperationBlock(availableVariables)
+class PrintValueBlock(availableVariables: List<VariableData>) : OperationBlock(availableVariables)
 {
     var variableName by mutableStateOf("")
 
@@ -35,7 +36,7 @@ class PrintValueBlock(private val availableVariables: Map<String, Int>) : Operat
         if (varName.isBlank()) {
             throw IllegalArgumentException("Введите название переменной")
         }
-        if (!availableVariables.containsKey(varName)) {
+        if (!availableVariables.any { it.name == varName }) {
             throw IllegalArgumentException("Переменная '$varName' не найдена")
         }
     }
@@ -43,7 +44,8 @@ class PrintValueBlock(private val availableVariables: Map<String, Int>) : Operat
     fun execute() {
         try {
             validateVariableName(variableName)
-            val value = availableVariables[variableName] ?: throw IllegalArgumentException("Переменная не найдена")
+            val value = availableVariables.find { it.name == variableName }?.value
+                ?: throw IllegalArgumentException("Переменная не найдена")
             println("Значение переменной $variableName: $value")
             error = ""
         } catch (e: IllegalArgumentException) {
