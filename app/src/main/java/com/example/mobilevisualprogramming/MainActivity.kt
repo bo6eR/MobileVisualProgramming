@@ -30,7 +30,6 @@ import androidx.compose.ui.zIndex
 import com.example.mobilevisualprogramming.blocks.*
 import com.example.mobilevisualprogramming.blocks.messages.*
 import com.example.mobilevisualprogramming.blocks.operators.*
-import com.example.mobilevisualprogramming.blocks.getandset.GetVarBlock
 import com.example.mobilevisualprogramming.blocks.getandset.SetVarBlock
 import com.example.mobilevisualprogramming.blocks.operations.PrintValueBlock
 import kotlinx.coroutines.CoroutineScope
@@ -55,8 +54,6 @@ class MainActivity : ComponentActivity() {
                 val scope = rememberCoroutineScope()
 
                 val showAddDialog = remember { mutableStateOf(false) }
-                val showSetGetDialog = remember { mutableStateOf(false) }
-                val chosenVariableTemp = remember { mutableStateOf<VariableData?>(null) }
 
                 val operatorsList = listOf(
                     "+" to { vars: List<VariableData> -> AdditionBlock(vars) },
@@ -85,25 +82,6 @@ class MainActivity : ComponentActivity() {
                     onDismiss = { showAddDialog.value = false }
                 )
 
-                SetGetChoiceMessage(show = showSetGetDialog,
-                    onChoice = { isGet ->
-                        chosenVariableTemp.value?.let { variable ->
-                            val newVariable = VariableData(
-                                name = variable.name,
-                                value = variable.value,
-                                position = dragOffset.value
-                            )
-                            val block = if (isGet) GetVarBlock(newVariable)
-                            else SetVarBlock(newVariable, variableList)
-                            block.id = nextBlockId+1
-                            placedBlocks.add(block)
-                            nextBlockId =  updateBlockIdsByPosition(placedBlocks)
-                        }
-                        showSetGetDialog.value = false
-                        chosenVariableTemp.value = null
-                    }
-                )
-
                 ModalNavigationDrawer(
                     drawerState = variablesDrawerState,
                     drawerContent = {
@@ -120,8 +98,15 @@ class MainActivity : ComponentActivity() {
                                 draggingVar = draggingVar,
                                 dragOffset = dragOffset,
                                 onVarDropped = { variable ->
-                                    chosenVariableTemp.value = variable
-                                    showSetGetDialog.value = true
+                                    val newVariable = VariableData(
+                                        name = variable.name,
+                                        value = variable.value,
+                                        position = dragOffset.value
+                                    )
+                                    val block = SetVarBlock(newVariable, variableList)
+                                    block.id = nextBlockId+1
+                                    placedBlocks.add(block)
+                                    nextBlockId =  updateBlockIdsByPosition(placedBlocks)
                                 },
                                 drawerState = variablesDrawerState,
                                 scope = scope
