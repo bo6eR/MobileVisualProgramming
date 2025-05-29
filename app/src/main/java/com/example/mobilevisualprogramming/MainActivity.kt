@@ -135,7 +135,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainPage(
-    placedBlocks: List<Block>,
+    placedBlocks: SnapshotStateList<Block>,
     variablesDrawerState: DrawerState,
     scope: CoroutineScope,
     onBlockPositionChanged: () -> Unit
@@ -174,6 +174,25 @@ fun MainPage(
                                 block.variable.position += dragAmount
                             },
                             onDragEnd = {
+                                onBlockPositionChanged()
+                            }
+                        )
+                    }
+                    .pointerInput(Unit){
+                        detectTapGestures(
+                            onDoubleTap = {
+                                if (placedBlocks.size == 1){
+                                    placedBlocks.clear()
+                                }
+                                else{
+                                    placedBlocks.removeIf { it.id == block.id }
+                                }
+                                //placedBlocks.forEach{ it ->
+                                //    if (it.id == block.id){
+                                //        placedBlocks.remove(block)
+                                //        println("SUCCESS")
+                                //    }
+                                //}
                                 onBlockPositionChanged()
                             }
                         )

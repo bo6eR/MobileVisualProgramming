@@ -10,7 +10,6 @@ abstract class OperationBlock(protected open var availableVariables: List<Variab
 {
     var error by mutableStateOf("")
 
-    // Добавляем метод для обновления переменных
     fun updateAvailableVariables(newVariables: List<VariableData>) {
         availableVariables = newVariables
     }

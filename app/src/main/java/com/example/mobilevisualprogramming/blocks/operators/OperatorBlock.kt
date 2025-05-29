@@ -21,7 +21,6 @@ abstract class OperatorBlock(
     var targetVarName by mutableStateOf("")
     var expression by mutableStateOf("")
 
-    // Проверка скобок
     protected fun isBracketsValid(s: String): Boolean {
         var balance = 0
         for (char in s) {
@@ -36,7 +35,6 @@ abstract class OperatorBlock(
         return balance == 0
     }
 
-    // Вычисление выражения
     protected fun evaluateExpression(): Int {
         // Объединяем targetVarName и выражение в одну формулу
         val fullExpression = when (this) {
