@@ -7,6 +7,9 @@ class SubtractionBlock(
 ) : OperatorBlock(availableVariables) {
 
     override fun applyOperation(a: Int, b: Int, op: String): Int = when (op) {
+        "+" -> a + b
+        "*" -> a * b
+        "/" -> a / b
         "-" -> a - b
         else -> throw IllegalArgumentException("Unsupported operation: $op")
     }
@@ -16,7 +19,7 @@ class SubtractionBlock(
         return try {
             validateInputs()
             val result = evaluateExpression()
-            // Логика сохранения результата
+            availableVariables.find { it.name == targetVarName }?.value = result
             true
         } catch (e: Exception) {
             error = "Ошибка: ${e.message}"

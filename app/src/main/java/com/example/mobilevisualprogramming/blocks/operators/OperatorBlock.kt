@@ -36,9 +36,8 @@ abstract class OperatorBlock(
         return balance == 0
     }
 
-    // Вычисление выражения
-    protected fun evaluateExpression(): Int {
-        // Объединяем targetVarName и выражение в одну формулу
+    protected fun evaluateExpression(): Int
+    {
         val fullExpression = when (this) {
             is AdditionBlock -> "$targetVarName + ($expression)"
             is SubtractionBlock -> "$targetVarName - ($expression)"
@@ -47,7 +46,6 @@ abstract class OperatorBlock(
             else -> throw IllegalStateException("Unknown operator type")
         }
 
-        // Заменяем переменные на значения
         val replaced = Regex("[a-zA-Z_]\\w*").replace(fullExpression) {
             availableVariables.find { varData -> varData.name == it.value }?.value?.toString()
                 ?: throw IllegalArgumentException("Переменная '${it.value}' не найдена")

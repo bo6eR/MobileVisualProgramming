@@ -334,16 +334,13 @@ fun DrawerMenuContent(
         OperatorsMenuContent(
             operatorsList = operatorsList,
             onOperatorSelected = { creator ->
-                val vars = variableList
-                val operator = creator(vars)
+                val operator = creator(variableList)
                 operator.id = nextBlockId+1
                 scope.launch { drawerState.close() }
 
                 placedBlocks.add(operator)
                 updateBlockIdsByPosition(placedBlocks = placedBlocks)
-            },
-            scope = scope,
-            drawerState = drawerState
+            }
         )
     }
 }
@@ -352,8 +349,6 @@ fun DrawerMenuContent(
 fun OperatorsMenuContent(
     operatorsList: List<Pair<String, (List<VariableData>) -> OperationBlock>>,
     onOperatorSelected: ((List<VariableData>) -> OperationBlock) -> Unit,
-    scope: CoroutineScope,
-    drawerState: DrawerState,
 ) {
     Column(
         modifier = Modifier.fillMaxSize(),
