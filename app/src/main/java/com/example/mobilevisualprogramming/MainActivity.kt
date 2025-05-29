@@ -190,8 +190,8 @@ fun MainPage(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 16.dp),
-        contentAlignment = Alignment.TopCenter
+            .padding(top = 50.dp, end = 16.dp),
+        contentAlignment = Alignment.TopEnd
     ) {
         FloatingActionButton(
             onClick = {
