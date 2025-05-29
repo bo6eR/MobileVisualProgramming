@@ -58,7 +58,7 @@ class MainActivity : ComponentActivity() {
                     "-" to { vars: List<VariableData> -> SubtractionBlock(vars) },
                     "*" to { vars: List<VariableData> -> MultiplicationBlock(vars) },
                     "/" to { vars: List<VariableData> -> DivisionBlock(vars) },
-                    "Print" to { vars: List<VariableData> -> PrintValueBlock(vars)}
+                    "печать" to { vars: List<VariableData> -> PrintValueBlock(vars)}
                 )
 
                 fun updateVariablesInBlocks(newVariables: List<VariableData>) {
@@ -247,7 +247,7 @@ fun OperatorsMenuContent(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Operators",
+            text = "Операторы:",
             color = Color.White,
             fontSize = 30.sp
         )
@@ -319,7 +319,7 @@ fun DrawerMenuContent(
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             Text(
-                text = "Variables",
+                text = "Переменные:",
                 color = Color.White,
                 fontSize = 30.sp)
             Button(

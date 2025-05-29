@@ -1,5 +1,7 @@
 package com.example.mobilevisualprogramming.blocks.getandset
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.*
@@ -9,6 +11,9 @@ import com.example.mobilevisualprogramming.blocks.VarBlock
 import com.example.mobilevisualprogramming.main.VariableData
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -139,33 +144,38 @@ class SetVarBlock(
 
     @Composable
     override fun RenderContent() {
-        Row(modifier = Modifier
-            .padding(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "${variable.name} = ",
-                color = Color.White
+        Column(modifier = Modifier) {
+            Row(modifier = Modifier
+                .padding(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "${variable.name} = ",
+                    color = Color.White
 
-            )
-            TextField(
-                value = expression,
-                onValueChange = { expression = it },
-                shape = RoundedCornerShape(12.dp),
-                singleLine = true,
-                colors = TextFieldDefaults.colors(
-                    Color.White,
-                    unfocusedTextColor = Color.White,
-                    focusedContainerColor = textFieldBgColor,
-                    unfocusedContainerColor = textFieldBgColor,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    disabledIndicatorColor = Color.Transparent
                 )
-            )
+                TextField(
+                    value = expression,
+                    onValueChange = { expression = it },
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true,
+                    colors = TextFieldDefaults.colors(
+                        Color.White,
+                        unfocusedTextColor = Color.White,
+                        focusedContainerColor = textFieldBgColor,
+                        unfocusedContainerColor = textFieldBgColor,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        disabledIndicatorColor = Color.Transparent
+                    )
+                )
+
+
+            }
             if (error.isNotEmpty()) {
                 Text(text = error, color = Color.Red)
             }
         }
+
     }
 }

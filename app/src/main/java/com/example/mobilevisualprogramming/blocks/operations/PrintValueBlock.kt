@@ -1,5 +1,7 @@
 package com.example.mobilevisualprogramming.blocks.operations
 
+import android.graphics.Paint
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -12,6 +14,8 @@ import androidx.compose.ui.unit.dp
 import com.example.mobilevisualprogramming.blocks.OperationBlock
 import com.example.mobilevisualprogramming.blocks.render.OperatorVisualBlock
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.style.TextAlign
 import com.example.mobilevisualprogramming.main.VariableData
 
 class PrintValueBlock(availableVariables: List<VariableData>) : OperationBlock(availableVariables)
@@ -52,11 +56,11 @@ class PrintValueBlock(availableVariables: List<VariableData>) : OperationBlock(a
             error = e.message ?: "Ошибка при выводе значения"
         }
     }
-
+    val textFieldBgColor = Color(0xFF4B2267)
     @Composable
     override fun Render() {
         OperatorVisualBlock(
-            title = "Print Value",
+            title = " Печать:",
             modifier = Modifier.padding(8.dp),
             blockId = id
         ) {
@@ -79,13 +83,34 @@ class PrintValueBlock(availableVariables: List<VariableData>) : OperationBlock(a
                     colors = TextFieldDefaults.colors(
                         Color.White,
                         unfocusedTextColor = Color.White,
-                        focusedContainerColor = Color(0xFF4B2267),
-                        unfocusedContainerColor = Color(0xFF4B2267),
+                        focusedContainerColor = textFieldBgColor,
+                        unfocusedContainerColor = textFieldBgColor,
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent,
                         disabledIndicatorColor = Color.Transparent
                     )
                 )
+                Spacer(modifier = Modifier.height(12.dp))
+////////////////////////////////////////////////////////////////////////////
+                var temp = "...временный вывод..."
+////////////////////////////////////////////////////////////////////////////
+                Text(
+                    text = " Вывод:",
+                    color = Color.White
+                )
+                Box(
+                    modifier = Modifier
+                        .background(
+                        color = textFieldBgColor,
+                        shape = RoundedCornerShape(12.dp)
+                        )
+                        .fillMaxWidth()
+                        .height(56.dp)
+                        .padding(0.dp),
+                    contentAlignment = Alignment.CenterStart
+                ){
+                    Text(text = temp, color = Color.White, modifier = Modifier.padding(start = 16.dp))
+                }
 
                 if (error.isNotEmpty()) {
                     Text(text = error, color = Color.Red)
