@@ -131,6 +131,7 @@ class SetVarBlock(
             }
             val result = evaluateExpression(expression, availableVariables)
             variable.value = result
+            availableVariables.find { it.name ==  variable.name }?.value = result
         } catch (e: Exception) {
             error = "Ошибка: ${e.message}"
         }

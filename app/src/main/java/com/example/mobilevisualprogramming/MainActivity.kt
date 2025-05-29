@@ -1,7 +1,6 @@
 package com.example.mobilevisualprogramming
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -49,7 +48,6 @@ class MainActivity : ComponentActivity() {
                 val placedBlocks = remember { mutableStateListOf<Block>() }
                 var nextBlockId by remember { mutableIntStateOf(1) }
 
-
                 val variablesDrawerState = rememberDrawerState(DrawerValue.Closed)
                 val scope = rememberCoroutineScope()
 
@@ -70,6 +68,12 @@ class MainActivity : ComponentActivity() {
                             is SetVarBlock -> block.updateAvailableVariables(newVariables)
                         }
                     }
+                }
+
+                fun removeVariable(variable: VariableData) {
+                    val newList = variableList.toMutableList().apply { remove(variable) }
+                    variableList = newList
+                    updateVariablesInBlocks(newList)
                 }
 
                 AddVariableDialog(
@@ -96,7 +100,6 @@ class MainActivity : ComponentActivity() {
                                 variableList = variableList,
                                 showAddDialog = showAddDialog,
                                 onVarDropped = { variable ->
-
                                     val newVariable = VariableData(
                                         name = variable.name,
                                         value = variable.value,
@@ -107,7 +110,10 @@ class MainActivity : ComponentActivity() {
 
                                     placedBlocks.add(block)
                                     scope.launch { variablesDrawerState.close() }
-                                    nextBlockId =  updateBlockIdsByPosition(placedBlocks)
+                                    nextBlockId = updateBlockIdsByPosition(placedBlocks)
+                                },
+                                onVarRemoved = { variable ->
+                                    removeVariable(variable)
                                 },
                                 drawerState = variablesDrawerState,
                                 scope = scope
@@ -115,14 +121,12 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 ) {
-
                     MainPage(
                         placedBlocks = placedBlocks,
                         variablesDrawerState = variablesDrawerState,
                         scope = scope,
                         onBlockPositionChanged = { nextBlockId = updateBlockIdsByPosition(placedBlocks) }
                     )
-
                 }
             }
         }
@@ -139,7 +143,6 @@ fun MainPage(
     var scale by remember { mutableFloatStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
 
-
     Box(modifier = Modifier
         .fillMaxSize()
         .transformable(
@@ -155,11 +158,10 @@ fun MainPage(
             translationY = offset.y
         )
     ) {
-
         placedBlocks.forEach { block ->
             Box(
                 modifier = Modifier
-                    .absoluteOffset  {
+                    .absoluteOffset {
                         IntOffset(
                             block.variable.position.x.roundToInt(),
                             block.variable.position.y.roundToInt()
@@ -180,7 +182,6 @@ fun MainPage(
                 block.Render()
             }
         }
-
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -206,7 +207,7 @@ fun MainPage(
                     }
             },
             modifier = Modifier,
-            containerColor = Color(0xFF4CAF50), // Зеленый цвет
+            containerColor = Color(0xFF4CAF50),
             contentColor = Color.White
         ) {
             Icon(
@@ -259,7 +260,6 @@ fun updateBlockIdsByPosition(
     return placedBlocks.size + 1
 }
 
-
 @Composable
 fun BoxScope.ButtonOfMenuOpening(scope: CoroutineScope, drawerState: DrawerState) {
     Button(
@@ -270,7 +270,7 @@ fun BoxScope.ButtonOfMenuOpening(scope: CoroutineScope, drawerState: DrawerState
         },
         modifier = Modifier.align(Alignment.BottomEnd).padding(end = 10.dp, bottom = 40.dp),
     ) {
-        Text("Open/close menu", fontSize = 20.sp)
+        Text("Menu", fontSize = 20.sp)
     }
 }
 
@@ -282,6 +282,7 @@ fun DrawerMenuContent(
     variableList: List<VariableData>,
     showAddDialog: MutableState<Boolean>,
     onVarDropped: (VariableData) -> Unit,
+    onVarRemoved: (VariableData) -> Unit,
     drawerState: DrawerState,
     scope: CoroutineScope
 ) {
@@ -315,23 +316,39 @@ fun DrawerMenuContent(
         Spacer(Modifier.height(8.dp))
 
         variableList.forEach { variable ->
-            Text(
-                text = variable.name,
-                textAlign = TextAlign.Center,
-                fontSize = 30.sp,
+            Row(
                 modifier = Modifier
-                    .padding(20.dp)
-                    .background(Color.LightGray, shape = RoundedCornerShape(12.dp))
-                    .width((widthOfVar - 150).dp)
-                    .pointerInput(variable) {
-                        detectTapGestures(
-                            onTap = {
-                                onVarDropped(variable)
-                            }
-                        )
-                    }
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = variable.name,
+                    textAlign = TextAlign.Center,
+                    fontSize = 30.sp,
+                    modifier = Modifier
+                        .weight(1f)
+                        .background(Color.LightGray, shape = RoundedCornerShape(12.dp))
+                        .pointerInput(variable) {
+                            detectTapGestures(
+                                onTap = {
+                                    onVarDropped(variable)
+                                }
+                            )
+                        }
+                        .padding(vertical = 8.dp)
+                )
 
-            )
+                IconButton(
+                    onClick = { onVarRemoved(variable) },
+                    modifier = Modifier
+                        .size(40.dp)
+                        .padding(start = 8.dp)
+                ) {
+                    Text("×", color = Color.Red, fontSize = 30.sp)
+                }
+            }
         }
 
         Spacer(Modifier.height(16.dp))
@@ -339,8 +356,7 @@ fun DrawerMenuContent(
         OperatorsMenuContent(
             operatorsList = operatorsList,
             onOperatorSelected = { creator ->
-                val vars = variableList
-                val operator = creator(vars)
+                val operator = creator(variableList)
                 operator.id = nextBlockId+1
                 scope.launch { drawerState.close() }
 
@@ -348,6 +364,5 @@ fun DrawerMenuContent(
                 updateBlockIdsByPosition(placedBlocks = placedBlocks)
             }
         )
-
     }
 }
