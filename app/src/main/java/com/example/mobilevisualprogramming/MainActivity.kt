@@ -55,6 +55,10 @@ class MainActivity : ComponentActivity() {
 
                 val showAddDialog = remember { mutableStateOf(false) }
 
+                // Объявляем scale и offset здесь, чтобы они были доступны в обоих компонентах
+                var scale by remember { mutableFloatStateOf(1f) }
+                var offset by remember { mutableStateOf(Offset.Zero) }
+
                 val operatorsList = listOf(
                     "+" to { vars: List<VariableData> -> AdditionBlock(vars) },
                     "-" to { vars: List<VariableData> -> SubtractionBlock(vars) },
@@ -106,24 +110,28 @@ class MainActivity : ComponentActivity() {
                                     val block = SetVarBlock(newVariable, variableList)
                                     block.id = nextBlockId+1
                                     placedBlocks.add(block)
-                                    nextBlockId =  updateBlockIdsByPosition(placedBlocks)
+                                    nextBlockId = updateBlockIdsByPosition(placedBlocks)
                                 },
                                 drawerState = variablesDrawerState,
-                                scope = scope
+                                scope = scope,
+                                scale = scale,
+                                offset = offset
                             )
                         }
                     }
                 ) {
-
                     MainPage(
                         placedBlocks = placedBlocks,
                         variablesDrawerState = variablesDrawerState,
                         scope = scope,
                         draggingVar = draggingVar,
                         dragOffset = dragOffset,
-                        onBlockPositionChanged = { nextBlockId = updateBlockIdsByPosition(placedBlocks) }
+                        onBlockPositionChanged = { nextBlockId = updateBlockIdsByPosition(placedBlocks) },
+                        scale = scale,
+                        offset = offset,
+                        onScaleChange = { newScale -> scale = newScale },
+                        onOffsetChange = { newOffset -> offset = newOffset }
                     )
-
                 }
             }
         }
@@ -137,17 +145,19 @@ fun MainPage(
     scope: CoroutineScope,
     draggingVar: MutableState<VariableData?>,
     dragOffset: MutableState<Offset>,
-    onBlockPositionChanged: () -> Unit
+    onBlockPositionChanged: () -> Unit,
+    scale: Float,
+    offset: Offset,
+    onScaleChange: (Float) -> Unit,
+    onOffsetChange: (Offset) -> Unit
 ) {
-    var scale by remember { mutableFloatStateOf(1f) }
-    var offset by remember { mutableStateOf(Offset.Zero) }
-
     Box(modifier = Modifier
         .fillMaxSize()
         .transformable(
             state = rememberTransformableState { zoomChange, panChange, _ ->
-                scale = (scale * zoomChange).coerceIn(0.2f, 2f)
-                offset += panChange
+                val newScale = (scale * zoomChange).coerceIn(0.5f, 1.7f)
+                onScaleChange(newScale)
+                onOffsetChange(offset + panChange)
             }
         )
         .graphicsLayer(
@@ -160,7 +170,7 @@ fun MainPage(
         placedBlocks.forEach { block ->
             Box(
                 modifier = Modifier
-                    .absoluteOffset  {
+                    .absoluteOffset {
                         IntOffset(
                             block.variable.position.x.roundToInt(),
                             block.variable.position.y.roundToInt()
@@ -187,8 +197,8 @@ fun MainPage(
                 modifier = Modifier
                     .offset {
                         IntOffset(
-                            dragOffset.value.x.roundToInt(),
-                            dragOffset.value.y.roundToInt()
+                            (dragOffset.value.x / scale).roundToInt(),
+                            (dragOffset.value.y / scale).roundToInt()
                         )
                     }
                     .zIndex(1f)
@@ -230,7 +240,7 @@ fun MainPage(
                     }
             },
             modifier = Modifier,
-            containerColor = Color(0xFF4CAF50), // Зеленый цвет
+            containerColor = Color(0xFF4CAF50),
             contentColor = Color.White
         ) {
             Icon(
@@ -238,6 +248,103 @@ fun MainPage(
                 contentDescription = "Start execution"
             )
         }
+    }
+}
+
+@Composable
+fun DrawerMenuContent(
+    nextBlockId: Int,
+    placedBlocks: SnapshotStateList<Block>,
+    operatorsList: List<Pair<String, (List<VariableData>) -> OperationBlock>>,
+    variableList: List<VariableData>,
+    showAddDialog: MutableState<Boolean>,
+    draggingVar: MutableState<VariableData?>,
+    dragOffset: MutableState<Offset>,
+    onVarDropped: (VariableData) -> Unit,
+    drawerState: DrawerState,
+    scope: CoroutineScope,
+    scale: Float,
+    offset: Offset
+) {
+    var widthOfVar by remember { mutableIntStateOf(0) }
+    val scrollState = rememberScrollState()
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .verticalScroll(scrollState)
+            .onSizeChanged { size -> widthOfVar = size.width },
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            Text(
+                text = "Variables",
+                color = Color.White,
+                fontSize = 30.sp)
+            Button(
+                onClick = { showAddDialog.value = true },
+                modifier = Modifier.size(35.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
+                contentPadding = PaddingValues(0.dp)
+            ) {
+                Text("+", color = Color.White, fontSize = 25.sp)
+            }
+        }
+
+        Spacer(Modifier.height(8.dp))
+
+        variableList.forEach { variable ->
+            Text(
+                text = variable.name,
+                textAlign = TextAlign.Center,
+                fontSize = 30.sp,
+                modifier = Modifier
+                    .padding(20.dp)
+                    .background(Color.LightGray, shape = RoundedCornerShape(12.dp))
+                    .width((widthOfVar - 150).dp)
+                    .pointerInput(variable) {
+                        detectDragGestures(
+                            onDragStart = { touchPosition ->
+                                draggingVar.value = variable
+                                dragOffset.value = touchPosition * scale - offset
+                                scope.launch { drawerState.close() }
+                            },
+                            onDrag = { change, dragAmount ->
+                                change.consume()
+                                dragOffset.value += dragAmount * scale
+                            },
+                            onDragEnd = {
+                                onVarDropped(variable)
+                                draggingVar.value = null
+                                dragOffset.value = Offset.Zero
+                            },
+                            onDragCancel = {
+                                draggingVar.value = null
+                                dragOffset.value = Offset.Zero
+                            }
+                        )
+                    }
+            )
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        OperatorsMenuContent(
+            operatorsList = operatorsList,
+            onOperatorSelected = { creator ->
+                val vars = variableList
+                val operator = creator(vars)
+                operator.id = nextBlockId+1
+                scope.launch { drawerState.close() }
+
+                placedBlocks.add(operator)
+                updateBlockIdsByPosition(placedBlocks = placedBlocks)
+            },
+            scope = scope,
+            drawerState = drawerState
+        )
     }
 }
 
@@ -285,7 +392,6 @@ fun updateBlockIdsByPosition(
     return placedBlocks.size + 1
 }
 
-
 @Composable
 fun BoxScope.ButtonOfMenuOpening(scope: CoroutineScope, drawerState: DrawerState) {
     Button(
@@ -300,98 +406,3 @@ fun BoxScope.ButtonOfMenuOpening(scope: CoroutineScope, drawerState: DrawerState
     }
 }
 
-@Composable
-fun DrawerMenuContent(
-    nextBlockId: Int,
-    placedBlocks: SnapshotStateList<Block>,
-    operatorsList: List<Pair<String, (List<VariableData>) -> OperationBlock>>,
-    variableList: List<VariableData>,
-    showAddDialog: MutableState<Boolean>,
-    draggingVar: MutableState<VariableData?>,
-    dragOffset: MutableState<Offset>,
-    onVarDropped: (VariableData) -> Unit,
-    drawerState: DrawerState,
-    scope: CoroutineScope
-) {
-    var widthOfVar by remember { mutableIntStateOf(0) }
-    val scrollState = rememberScrollState()
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .verticalScroll(scrollState)
-            .onSizeChanged { size -> widthOfVar = size.width },
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            Text(
-                text = "Variables",
-                color = Color.White,
-                fontSize = 30.sp)
-            Button(
-                onClick = { showAddDialog.value = true },
-                modifier = Modifier.size(35.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
-                contentPadding = PaddingValues(0.dp)
-            ) {
-                Text("+", color = Color.White, fontSize = 25.sp)
-            }
-        }
-
-        Spacer(Modifier.height(8.dp))
-
-        variableList.forEach { variable ->
-            Text(
-                text = variable.name,
-                textAlign = TextAlign.Center,
-                fontSize = 30.sp,
-                modifier = Modifier
-                    .padding(20.dp)
-                    .background(Color.LightGray, shape = RoundedCornerShape(12.dp))
-                    .width((widthOfVar - 150).dp)
-                    .pointerInput(variable) {
-                        detectDragGestures(
-                            onDragStart = {
-                                draggingVar.value = variable
-                                dragOffset.value = it
-                                scope.launch { drawerState.close() }
-                            },
-                            onDrag = { change, offset ->
-                                change.consume()
-                                dragOffset.value += offset
-                            },
-                            onDragEnd = {
-                                onVarDropped(variable)
-                                draggingVar.value = null
-                                dragOffset.value = Offset.Zero
-                            },
-                            onDragCancel = {
-                                draggingVar.value = null
-                                dragOffset.value = Offset.Zero
-                            }
-                        )
-                    }
-            )
-        }
-
-        Spacer(Modifier.height(16.dp))
-
-        OperatorsMenuContent(
-            operatorsList = operatorsList,
-            onOperatorSelected = { creator ->
-                val vars = variableList
-                val operator = creator(vars)
-                operator.id = nextBlockId+1
-                scope.launch { drawerState.close() }
-
-                placedBlocks.add(operator)
-                updateBlockIdsByPosition(placedBlocks = placedBlocks)
-            },
-            scope = scope,
-            drawerState = drawerState
-        )
-
-    }
-}
