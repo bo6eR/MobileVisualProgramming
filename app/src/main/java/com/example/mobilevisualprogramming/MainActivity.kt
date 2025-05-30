@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -54,13 +55,22 @@ class MainActivity : ComponentActivity() {
 
                 val showAddDialog = remember { mutableStateOf(false) }
 
+
+                val plusText = androidx.compose.ui.res.stringResource(id = R.string.plus)
+                val minusText = androidx.compose.ui.res.stringResource(id = R.string.minus)
+                val divideText = androidx.compose.ui.res.stringResource(id = R.string.divide)
+                val multiplyText = androidx.compose.ui.res.stringResource(id = R.string.multiply)
+                val printText = androidx.compose.ui.res.stringResource(id = R.string.print)
+                val uslovieText = androidx.compose.ui.res.stringResource(id = R.string.uslovie)
+
+
                 val operatorsList = listOf(
-                    "+" to { vars: List<VariableData> -> AdditionBlock(vars) },
-                    "-" to { vars: List<VariableData> -> SubtractionBlock(vars) },
-                    "*" to { vars: List<VariableData> -> MultiplicationBlock(vars) },
-                    "/" to { vars: List<VariableData> -> DivisionBlock(vars) },
-                    "печать" to { vars: List<VariableData> -> PrintValueBlock(vars)},
-                    "условие" to { vars: List<VariableData> -> IfBlock(vars)}
+                    plusText to { vars: List<VariableData> -> AdditionBlock(vars) },
+                    minusText to { vars: List<VariableData> -> SubtractionBlock(vars) },
+                    multiplyText to { vars: List<VariableData> -> MultiplicationBlock(vars) },
+                    divideText to { vars: List<VariableData> -> DivisionBlock(vars) },
+                    printText to { vars: List<VariableData> -> PrintValueBlock(vars)},
+                    uslovieText to { vars: List<VariableData> -> IfBlock(vars)}
                 )
 
                 fun updateVariablesInBlocks(newVariables: List<VariableData>) {
@@ -144,8 +154,10 @@ fun MainPage(
     onBlockPositionChanged: () -> Unit,
     variableList: SnapshotStateList<VariableData>
 ) {
+    val context = LocalContext.current
     var scale by remember { mutableFloatStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
+    val iconDescription = androidx.compose.ui.res.stringResource(id = R.string.iconDescription)
 
     Box(modifier = Modifier
         .fillMaxSize()
@@ -196,7 +208,7 @@ fun MainPage(
                         )
                     }
             ) {
-                block.Render()
+                block.Render(context)
             }
         }
     }
@@ -214,16 +226,17 @@ fun MainPage(
         FloatingActionButton(
             onClick = {
                 var currentIndex = 0
+
                 val sortedBlocks = placedBlocks.sortedBy { it.id }
                 while (currentIndex < sortedBlocks.size) {
                     when (val block = sortedBlocks[currentIndex])
                     {
-                        is PrintValueBlock -> block.execute()
-                        is SetVarBlock -> block.execute()
-                        is OperatorBlock -> block.execute()
+                        is PrintValueBlock -> block.execute(context)
+                        is SetVarBlock -> block.execute(context)
+                        is OperatorBlock -> block.execute(context)
                         is IfBlock ->
                         {
-                            block.execute(sortedBlocks, block.id)
+                            block.execute(context = context, sortedBlocks, block.id)
                             val steps = block.step.toIntOrNull() ?: 0
                             currentIndex += steps
                         }
@@ -249,7 +262,7 @@ fun MainPage(
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_play),
-                contentDescription = "Start execution"
+                contentDescription = iconDescription
             )
         }
     }
@@ -260,12 +273,13 @@ fun OperatorsMenuContent(
     operatorsList: List<Pair<String, (List<VariableData>) -> OperationBlock>>,
     onOperatorSelected: ((List<VariableData>) -> OperationBlock) -> Unit
 ) {
+    val operatorsText = androidx.compose.ui.res.stringResource(id = R.string.operatorsText)
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Операторы:",
+            text = operatorsText,
             color = Color.White,
             fontSize = 30.sp
         )
@@ -299,6 +313,7 @@ fun updateBlockIdsByPosition(
 
 @Composable
 fun BoxScope.ButtonOfMenuOpening(scope: CoroutineScope, drawerState: DrawerState) {
+    val menuText = androidx.compose.ui.res.stringResource(id = R.string.menuText)
     Button(
         onClick = {
             scope.launch {
@@ -307,7 +322,7 @@ fun BoxScope.ButtonOfMenuOpening(scope: CoroutineScope, drawerState: DrawerState
         },
         modifier = Modifier.align(Alignment.BottomEnd).padding(end = 10.dp, bottom = 40.dp),
     ) {
-        Text("Menu", fontSize = 20.sp)
+        Text(text = menuText, fontSize = 20.sp)
     }
 }
 
@@ -325,6 +340,9 @@ fun DrawerMenuContent(
 ) {
     var widthOfVar by remember { mutableIntStateOf(0) }
     val scrollState = rememberScrollState()
+    val variablesText = androidx.compose.ui.res.stringResource(id = R.string.variablesText)
+    val plusText = androidx.compose.ui.res.stringResource(id = R.string.plus)
+    val deleteVariableText = androidx.compose.ui.res.stringResource(id = R.string.deleteVariableText)
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -337,7 +355,7 @@ fun DrawerMenuContent(
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             Text(
-                text = "Переменные:",
+                text = variablesText,
                 color = Color.White,
                 fontSize = 30.sp)
             Button(
@@ -346,7 +364,7 @@ fun DrawerMenuContent(
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
                 contentPadding = PaddingValues(0.dp)
             ) {
-                Text("+", color = Color.White, fontSize = 25.sp)
+                Text(text = plusText, color = Color.White, fontSize = 25.sp)
             }
         }
 
@@ -383,7 +401,7 @@ fun DrawerMenuContent(
                         .size(40.dp)
                         .padding(start = 8.dp)
                 ) {
-                    Text("×", color = Color.Red, fontSize = 30.sp)
+                    Text(text = deleteVariableText, color = Color.Red, fontSize = 30.sp)
                 }
             }
         }

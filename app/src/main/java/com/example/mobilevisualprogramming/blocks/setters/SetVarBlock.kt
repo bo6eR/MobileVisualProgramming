@@ -1,5 +1,6 @@
 package com.example.mobilevisualprogramming.blocks.setters
 
+import android.content.Context
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.*
@@ -14,6 +15,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
+import com.example.mobilevisualprogramming.R
 import java.util.*
 
 val textFieldBgColor = Color(0xFF4B2267)
@@ -46,18 +48,20 @@ class SetVarBlock(
         return balance == 0
     }
 
-    private fun evaluateExpression(expr: String, vars: List<VariableData>): Int {
+    private fun evaluateExpression(context:Context, expr: String, vars: List<VariableData>): Int {
         val replaced = Regex("[a-zA-Z_]\\w*").replace(expr) {
             val name = it.value
-            vars.find { it.name == name }?.toString() ?: throw IllegalArgumentException("Переменная \"$name\" не объявлена")
+            vars.find { it.name == name }?.toString() ?: throw
+            IllegalArgumentException(context.getString(R.string.error_variable_not_declared, name))
         }
 
         if (Regex("[^0-9+\\-*/%().\\s]").containsMatchIn(replaced)) {
-            throw IllegalArgumentException("Недопустимые символы в выражении")
+            throw
+            IllegalArgumentException(context.getString(R.string.error_invalid_characters_in_expression))
         }
 
         val rpn = toRPN(replaced)
-        return evalRPN(rpn)
+        return evalRPN(context, rpn)
     }
 
     private fun toRPN(expr: String): List<String> {
@@ -99,7 +103,7 @@ class SetVarBlock(
         }
     }
 
-    private fun evalRPN(rpn: List<String>): Int {
+    private fun evalRPN(context:Context, rpn: List<String>): Int {
         val stack = Stack<Int>()
         for (token in rpn) {
             when {
@@ -113,7 +117,10 @@ class SetVarBlock(
                         "*" -> a * b
                         "/" -> a / b
                         "%" -> a % b
-                        else -> throw IllegalArgumentException("Неизвестный оператор: $token")
+                        else -> throw
+                        throw
+                        IllegalArgumentException(context.getString(R.string.error_unknown_operator, token))
+
                     })
                 }
             }
@@ -121,17 +128,19 @@ class SetVarBlock(
         return stack.pop()
     }
 
-    fun execute() {
+    fun execute(context:Context) {
         error = ""
         try {
             if (!isBracketsValid(expression)) {
-                throw IllegalArgumentException("Несбалансированные скобки")
+                throw
+                IllegalArgumentException(context.getString(R.string.error_unbalanced_brackets))
+
             }
-            val result = evaluateExpression(expression, availableVariables)
+            val result = evaluateExpression(context, expression, availableVariables)
             variable.value = result
             availableVariables.find { it.name ==  variable.name }?.value = result
         } catch (e: Exception) {
-            error = "Ошибка: ${e.message}"
+            error = context.getString(R.string.if_block_error, e.message)
         }
     }
 

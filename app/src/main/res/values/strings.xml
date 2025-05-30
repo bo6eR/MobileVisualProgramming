@@ -1,3 +1,79 @@
 <resources>
     <string name="app_name">MobileVisualProgramming</string>
+    <string name="plus">+</string>
+    <string name="minus">-</string>
+    <string name="divide">/</string>
+    <string name="multiply">*</string>
+    <string name="print">печать</string>
+    <string name="uslovie">условие</string>
+    <string name="iconDescription">Start execution</string>
+    <string name="operatorsText">Операторы:</string>
+    <string name="menuText">Меню:</string>
+    <string name="variablesText">Переменнные:</string>
+    <string name="deleteVariableText">×</string>
+    <string name="addVariableText">Добавить переменную</string>
+    <string name="nameOfVarText">Имя переменной</string>
+    <string name="addText">Добавить</string>
+    <string name="cancelText">Отмена</string>
+    <string name="emptyText" />
+
+
+
+    <string name="if_block_title">Условие If:</string>
+    <string name="if_block_condition_label">Условие:</string>
+    <string name="if_block_step_label">Шаг:</string>
+    <string name="if_block_result_label">Результат:</string>
+    <string name="if_block_condition_true">Условие истинно</string>
+    <string name="if_block_condition_false">Условие ложно</string>
+    <string name="if_block_error_execution">Ошибка выполнения условия</string>
+    <string name="if_block_error_enter_condition">Введите условие</string>
+    <string name="if_block_error_enter_step">Введите шаг</string>
+    <string name="if_block_error_step_positive">Шаг должен быть положительным числом</string>
+    <string name="if_block_error_step_gt_zero">Шаг должен быть больше 0</string>
+    <string name="if_block_error_var_usage">Неправильное использование переменной %1$s</string>
+    <string name="if_block_error_invalid_condition">Некорректное условие. Используйте операторы: %1$s</string>
+    <string name="if_block_error_eval_condition">Невозможно вычислить условие: %1$s</string>
+    <string name="if_block_error_unknown_operator">Неизвестный оператор: %1$s</string>
+    <string name="if_block_error_invalid_number">Некорректное число: %1$s</string>
+    <string name="if_block_error_invalid_expression">Некорректное выражение: %1$s</string>
+    <string name="if_block_error">Ошибка: %1$s</string>
+
+
+
+    <string name="print_value_title">Печать:</string>
+    <string name="print_value_variable_label">Переменная:</string>
+    <string name="print_value_output_label">Вывод:</string>
+    <string name="print_value_error_empty_name">Введите название переменной</string>
+    <string name="print_value_error_var_not_found">Переменная "%1$s" не найдена</string>
+    <string name="print_value_error_var_not_found_simple">Переменная не найдена</string>
+    <string name="print_value_error_output">Ошибка при выводе значения</string>
+    <string name="print_value_temp_output">…временный вывод…</string>
+
+    <string name="invalid_operation">Неверная операция: %1$s</string>
+    <string name="slojenie">Сложение (+)</string>
+    <string name="delenie">Деление (/)</string>
+    <string name="umnojenie">Умножение (*)</string>
+    <string name="vychitanie">Вычитание (-)</string>
+
+
+    <string name="error_variable_not_declared">Переменная "%1$s" не объявлена</string>
+    <string name="error_invalid_characters_in_expression">Недопустимые символы в выражении</string>
+    <string name="error_unknown_operator">Неизвестный оператор: %1$s</string>
+    <string name="error_unbalanced_brackets">Несбалансированные скобки</string>
+
+    <string name="value_display">Значение: %1$s</string>
+    <string name="variable_display">Переменная: %1$s</string>
+
+
+
+
+
+
+
+
+
+
+
+
+
 </resources>

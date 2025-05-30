@@ -21,22 +21,37 @@ import androidx.compose.runtime.setValue
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
-
+import androidx.compose.ui.res.stringResource
+import android.content.Context
+import com.example.mobilevisualprogramming.R
 
 class IfBlock(availableVariables: List<VariableData>) : OperationBlock(availableVariables) {
     private var condition by mutableStateOf("")
     var step by mutableStateOf("1")
     private var lastExecutionResult by mutableStateOf("...")
 
-    private val comparisonOperators = listOf(">", "<", ">=", "<=", "==", "!=")
-    private val logicalOperators = listOf("&&", "||")
+    private val comparisonOperators = listOf(
+        ">",
+        "<",
+        ">=",
+        "<=",
+        "==",
+        "!="
+    )
+    private val logicalOperators = listOf(
+        "&&",
+        "||"
+    )
 
-    fun execute(placedBlocks: List<Block>, currentBlockId: Int) {
+    fun execute(context: Context, placedBlocks: List<Block>, currentBlockId: Int) {
         try
         {
-            validateInputs()
-            val conditionResult = evaluateCondition()
-            lastExecutionResult = if (conditionResult) "Условие истинно" else "Условие ложно"
+            validateInputs(context)
+            val conditionResult = evaluateCondition(context)
+            lastExecutionResult = if (conditionResult)
+                context.getString(R.string.if_block_condition_true)
+            else
+                context.getString(R.string.if_block_condition_false)
 
             if (conditionResult)
             {
@@ -48,41 +63,43 @@ class IfBlock(availableVariables: List<VariableData>) : OperationBlock(available
                     for (i in currentIndex + 1 until endIndex)
                     {
                         when (val block = placedBlocks[i]) {
-                            is PrintValueBlock -> block.execute()
-                            is SetVarBlock -> block.execute()
-                            is OperatorBlock -> block.execute()
-                            is IfBlock -> block.execute(placedBlocks, block.id)
+                            is PrintValueBlock -> block.execute(context)
+                            is SetVarBlock -> block.execute(context)
+                            is OperatorBlock -> block.execute(context)
+                            is IfBlock -> block.execute(context, placedBlocks, block.id)
                         }
                     }
                 }
             }
             error = ""
         } catch (e: Exception) {
-            error = e.message ?: "Ошибка выполнения условия"
-            lastExecutionResult = "Ошибка: $error"
+            error = e.message ?: context.getString(R.string.if_block_error_execution)
+            lastExecutionResult = context.getString(R.string.if_block_error, error)
         }
     }
 
-    private fun validateInputs() {
+    private fun validateInputs(context: Context) {
         if (condition.isBlank()) {
-            throw IllegalArgumentException("Введите условие")
+            throw IllegalArgumentException(context.getString(R.string.if_block_error_enter_condition))
         }
         if (step.isBlank()) {
-            throw IllegalArgumentException("Введите шаг")
+            throw IllegalArgumentException(context.getString(R.string.if_block_error_enter_step))
         }
         if (!step.matches(Regex("\\d+"))) {
-            throw IllegalArgumentException("Шаг должен быть положительным числом")
+            throw IllegalArgumentException(context.getString(R.string.if_block_error_step_positive))
         }
         if (step.toInt() <= 0) {
-            throw IllegalArgumentException("Шаг должен быть больше 0")
+            throw IllegalArgumentException(context.getString(R.string.if_block_error_step_gt_zero))
         }
     }
 
-    private fun evaluateCondition(): Boolean {
+    private fun evaluateCondition(context: Context): Boolean {
         availableVariables.forEach { variable ->
             if (condition.contains(variable.name)) {
                 if (!condition.matches(Regex(".*\\b${variable.name}\\b.*"))) {
-                    throw IllegalArgumentException("Неправильное использование переменной ${variable.name}")
+                    throw IllegalArgumentException(
+                        context.getString(R.string.if_block_error_var_usage, variable.name)
+                    )
                 }
             }
         }
@@ -93,13 +110,20 @@ class IfBlock(availableVariables: List<VariableData>) : OperationBlock(available
         }
 
         if (!containsValidOperators(processedCondition)) {
-            throw IllegalArgumentException("Некорректное условие. Используйте операторы: ${comparisonOperators.joinToString()}")
+            throw IllegalArgumentException(
+                context.getString(
+                    R.string.if_block_error_invalid_condition,
+                    comparisonOperators.joinToString()
+                )
+            )
         }
         return try {
-            val result = evaluateBooleanExpression(processedCondition)
+            val result = evaluateBooleanExpression(context, processedCondition)
             result
         } catch (e: Exception) {
-            throw IllegalArgumentException("Невозможно вычислить условие: ${e.message}")
+            throw IllegalArgumentException(
+                context.getString(R.string.if_block_error_eval_condition, e.message ?: "")
+            )
         }
     }
 
@@ -109,20 +133,24 @@ class IfBlock(availableVariables: List<VariableData>) : OperationBlock(available
         return condition.matches(Regex(".*($operatorPattern).*"))
     }
 
-    private fun evaluateBooleanExpression(expression: String): Boolean {
+    private fun evaluateBooleanExpression(context: Context, expression: String): Boolean {
         if (expression.contains("||")) {
-            return expression.split("||").any { evaluateBooleanExpression(it.trim()) }
+            return expression.split("||").any { evaluateBooleanExpression(context, it.trim()) }
         }
         if (expression.contains("&&")) {
-            return expression.split("&&").all { evaluateBooleanExpression(it.trim()) }
+            return expression.split("&&").all { evaluateBooleanExpression(context, it.trim()) }
         }
 
         comparisonOperators.forEach { op ->
             if (expression.contains(op)) {
                 val parts = expression.split(op)
                 if (parts.size == 2) {
-                    val left = parts[0].trim().toDoubleOrNull() ?: throw IllegalArgumentException("Некорректное число: ${parts[0]}")
-                    val right = parts[1].trim().toDoubleOrNull() ?: throw IllegalArgumentException("Некорректное число: ${parts[1]}")
+                    val left = parts[0].trim().toDoubleOrNull() ?: throw IllegalArgumentException(
+                        context.getString(R.string.if_block_error_invalid_number, parts[0])
+                    )
+                    val right = parts[1].trim().toDoubleOrNull() ?: throw IllegalArgumentException(
+                        context.getString(R.string.if_block_error_invalid_number, parts[1])
+                    )
 
                     return when (op) {
                         ">" -> left > right
@@ -131,28 +159,32 @@ class IfBlock(availableVariables: List<VariableData>) : OperationBlock(available
                         "<=" -> left <= right
                         "==" -> left == right
                         "!=" -> left != right
-                        else -> throw IllegalArgumentException("Неизвестный оператор: $op")
+                        else -> throw IllegalArgumentException(
+                            context.getString(R.string.if_block_error_unknown_operator, op)
+                        )
                     }
                 }
             }
         }
 
-        throw IllegalArgumentException("Некорректное выражение: $expression")
+        throw IllegalArgumentException(
+            context.getString(R.string.if_block_error_invalid_expression, expression)
+        )
     }
 
     private val textFieldBgColor = Color(0xFF4B2267)
 
     @Composable
-    override fun Render() {
+    override fun Render(context: Context) {
         OperatorVisualBlock(
-            title = " Условие If:",
+            title = stringResource(R.string.if_block_title),
             blockId = id
         ) {
             Column(
                 modifier = Modifier.padding(8.dp),
             ) {
                 Text(
-                    text = " Условие:",
+                    text = stringResource(R.string.if_block_condition_label),
                     color = Color.White
                 )
                 TextField(
@@ -178,7 +210,7 @@ class IfBlock(availableVariables: List<VariableData>) : OperationBlock(available
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Text(
-                    text = " Шаг:",
+                    text = stringResource(R.string.if_block_step_label),
                     color = Color.White
                 )
                 TextField(
@@ -205,7 +237,7 @@ class IfBlock(availableVariables: List<VariableData>) : OperationBlock(available
                     )
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-                Text(text = " Результат:", color = Color.White)
+                Text(text = stringResource(R.string.if_block_result_label), color = Color.White)
                 Text(text = lastExecutionResult, color = Color.White, modifier = Modifier.padding(start = 16.dp))
             }
         }.Render()

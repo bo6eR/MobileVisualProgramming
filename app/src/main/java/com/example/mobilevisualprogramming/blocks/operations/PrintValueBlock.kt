@@ -15,47 +15,49 @@ import com.example.mobilevisualprogramming.blocks.renders.OperatorVisualBlock
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Alignment
 import com.example.mobilevisualprogramming.main.VariableData
+import androidx.compose.ui.res.stringResource
+import android.content.Context
+import com.example.mobilevisualprogramming.R
 
-class PrintValueBlock(availableVariables: List<VariableData>) : OperationBlock(availableVariables)
-{
+class PrintValueBlock(availableVariables: List<VariableData>) : OperationBlock(availableVariables) {
     private var variableName by mutableStateOf("")
-    private var temp by mutableStateOf("...временный вывод...")
+    private var temp by mutableStateOf("")
 
-    private fun validateVariableName(varName: String) {
+    private val textFieldBgColor = Color(0xFF4B2267)
+
+    private fun validateVariableName(varName: String, context: Context) {
         if (varName.isBlank()) {
-            throw IllegalArgumentException("Введите название переменной")
+            throw IllegalArgumentException(context.getString(R.string.print_value_error_empty_name))
         }
         if (!availableVariables.any { it.name == varName }) {
-            throw IllegalArgumentException("Переменная '$varName' не найдена")
+            throw IllegalArgumentException(context.getString(R.string.print_value_error_var_not_found, varName))
         }
     }
 
-    fun execute() {
+    fun execute(context: Context) {
         try {
-            validateVariableName(variableName)
+            validateVariableName(variableName, context)
             val value = availableVariables.find { it.name == variableName }?.value
-                ?: throw IllegalArgumentException("Переменная не найдена")
-            println("Значение переменной $variableName: $value")
+                ?: throw IllegalArgumentException(context.getString(R.string.print_value_error_var_not_found_simple))
             temp = value.toString()
             error = ""
         } catch (e: IllegalArgumentException) {
-            error = e.message ?: "Ошибка при выводе значения"
-            temp = "...временный вывод..."
+            error = e.message ?: context.getString(R.string.print_value_error_output)
+            temp = context.getString(R.string.print_value_temp_output)
         }
     }
-    private val textFieldBgColor = Color(0xFF4B2267)
 
     @Composable
-    override fun Render() {
+    override fun Render(context: Context) {
         OperatorVisualBlock(
-            title = " Печать:",
+            title = stringResource(R.string.print_value_title),
             blockId = id
         ) {
             Column(
                 modifier = Modifier.padding(8.dp),
             ) {
                 Text(
-                    text = " Переменная:",
+                    text = stringResource(R.string.print_value_variable_label),
                     color = Color.White
                 )
                 TextField(
@@ -80,20 +82,20 @@ class PrintValueBlock(availableVariables: List<VariableData>) : OperationBlock(a
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Text(
-                    text = " Вывод:",
+                    text = stringResource(R.string.print_value_output_label),
                     color = Color.White
                 )
                 Box(
                     modifier = Modifier
                         .background(
-                        color = textFieldBgColor,
-                        shape = RoundedCornerShape(12.dp)
+                            color = textFieldBgColor,
+                            shape = RoundedCornerShape(12.dp)
                         )
                         .fillMaxWidth()
                         .height(56.dp)
                         .padding(0.dp),
                     contentAlignment = Alignment.CenterStart
-                ){
+                ) {
                     Text(text = temp, color = Color.White, modifier = Modifier.padding(start = 16.dp))
                 }
 

@@ -1,5 +1,6 @@
 package com.example.mobilevisualprogramming.blocks.operators
 
+import android.content.Context
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -34,7 +35,7 @@ abstract class OperatorBlock(
         return balance == 0
     }
 
-    protected fun evaluateExpression(): Int
+    protected fun evaluateExpression(context: Context): Int
     {
         println("1")
         val fullExpression = when (this) {
@@ -54,7 +55,7 @@ abstract class OperatorBlock(
             throw IllegalArgumentException("Недопустимые символы в выражении")
         }
         println("4")
-        return evaluateRPN(toRPN(replaced))
+        return evaluateRPN(toRPN(replaced), context)
     }
 
     private fun toRPN(expr: String): List<String> {
@@ -93,7 +94,7 @@ abstract class OperatorBlock(
         else -> 0
     }
 
-    private fun evaluateRPN(rpn: List<String>): Int {
+    private fun evaluateRPN(rpn: List<String>, context: Context): Int {
         val stack = Stack<Int>()
         for (token in rpn) {
             when {
@@ -101,22 +102,22 @@ abstract class OperatorBlock(
                 else -> {
                     val b = stack.pop()
                     val a = stack.pop()
-                    stack.push(applyOperation(a, b, token))
+                    stack.push(applyOperation(a, b, token, context))
                 }
             }
         }
         return stack.pop()
     }
 
-    protected abstract fun applyOperation(a: Int, b: Int, op: String): Int
-    abstract fun execute(): Boolean
+    protected abstract fun applyOperation(a: Int, b: Int, op: String, context: Context): Int
+    abstract fun execute(context: Context): Boolean
 
     private val textFieldBgColor = Color(0xFF4B2267)
 
     @Composable
-    override fun Render() {
+    override fun Render(context: Context) {
         OperatorVisualBlock(
-            title = getOperatorTitle(),
+            title = getOperatorTitle(context),
             blockId = id
         ) {
             Column(
@@ -191,5 +192,5 @@ abstract class OperatorBlock(
         }
     }
 
-    protected abstract fun getOperatorTitle(): String
+    protected abstract fun getOperatorTitle(context: Context): String
 }
