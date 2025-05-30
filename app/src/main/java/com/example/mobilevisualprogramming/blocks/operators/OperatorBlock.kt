@@ -35,28 +35,26 @@ abstract class OperatorBlock(
         return balance == 0
     }
 
-    protected fun evaluateExpression(): Int {
-        // Объединяем targetVarName и выражение в одну формулу
+    protected fun evaluateExpression(): Int
+    {
+        println("1")
         val fullExpression = when (this) {
             is AdditionBlock -> "$targetVarName + ($expression)"
             is SubtractionBlock -> "$targetVarName - ($expression)"
             is MultiplicationBlock -> "$targetVarName * ($expression)"
             is DivisionBlock -> "$targetVarName / ($expression)"
-            else -> throw IllegalStateException("Unknown operator type")
+            else -> throw IllegalStateException("Неверный тип оператора")
         }
-
-        // Заменяем переменные на значения
+        println("2")
         val replaced = Regex("[a-zA-Z_]\\w*").replace(fullExpression) {
             availableVariables.find { varData -> varData.name == it.value }?.value?.toString()
                 ?: throw IllegalArgumentException("Переменная '${it.value}' не найдена")
         }
-
-        // Проверка на недопустимые символы
+        println("3")
         if (Regex("[^0-9+\\-*/%().\\s]").containsMatchIn(replaced)) {
             throw IllegalArgumentException("Недопустимые символы в выражении")
         }
-
-        // Конвертируем в ОПН и вычисляем
+        println("4")
         return evaluateRPN(toRPN(replaced))
     }
 
@@ -114,10 +112,7 @@ abstract class OperatorBlock(
     protected abstract fun applyOperation(a: Int, b: Int, op: String): Int
     abstract fun execute(): Boolean
 
-    val blockBgColor = Color(0xFF6750A4)
-    val textFieldBgColor = Color(0xFF4B2267)
-    val placeholderColor = Color(0xFF6D6D6D)
-    val idColor = Color(0xFFFBE200)
+    private val textFieldBgColor = Color(0xFF4B2267)
 
     @Composable
     override fun Render() {

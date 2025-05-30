@@ -22,6 +22,10 @@ class PrintValueBlock(availableVariables: List<VariableData>) : OperationBlock(a
 {
     var variableName by mutableStateOf("")
 
+    ////////////////////////////////////////////////////////////////////////////
+    var temp by mutableStateOf("...временный вывод...")
+////////////////////////////////////////////////////////////////////////////
+
     protected fun isBracketsValid(s: String): Boolean {
         var balance = 0
         for (char in s) {
@@ -51,9 +55,11 @@ class PrintValueBlock(availableVariables: List<VariableData>) : OperationBlock(a
             val value = availableVariables.find { it.name == variableName }?.value
                 ?: throw IllegalArgumentException("Переменная не найдена")
             println("Значение переменной $variableName: $value")
+            temp = value.toString()
             error = ""
         } catch (e: IllegalArgumentException) {
             error = e.message ?: "Ошибка при выводе значения"
+            temp = "...временный вывод..."
         }
     }
     val textFieldBgColor = Color(0xFF4B2267)
@@ -91,9 +97,7 @@ class PrintValueBlock(availableVariables: List<VariableData>) : OperationBlock(a
                     )
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-////////////////////////////////////////////////////////////////////////////
-                var temp = "...временный вывод..."
-////////////////////////////////////////////////////////////////////////////
+
                 Text(
                     text = " Вывод:",
                     color = Color.White

@@ -125,7 +125,8 @@ class MainActivity : ComponentActivity() {
                         placedBlocks = placedBlocks,
                         variablesDrawerState = variablesDrawerState,
                         scope = scope,
-                        onBlockPositionChanged = { nextBlockId = updateBlockIdsByPosition(placedBlocks) }
+                        onBlockPositionChanged = { nextBlockId = updateBlockIdsByPosition(placedBlocks) },
+                        variableList.toMutableStateList()
                     )
                 }
             }
@@ -138,7 +139,8 @@ fun MainPage(
     placedBlocks: SnapshotStateList<Block>,
     variablesDrawerState: DrawerState,
     scope: CoroutineScope,
-    onBlockPositionChanged: () -> Unit
+    onBlockPositionChanged: () -> Unit,
+    variableList: SnapshotStateList<VariableData>
 ) {
     var scale by remember { mutableFloatStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
@@ -215,15 +217,25 @@ fun MainPage(
     ) {
         FloatingActionButton(
             onClick = {
-                placedBlocks
-                    .sortedBy { it.id }
-                    .forEach { block ->
-                        when (block) {
+                placedBlocks.sortedBy { it.id }.forEach { block ->
+                        when (block)
+                        {
                             is PrintValueBlock-> block.execute()
                             is SetVarBlock -> block.execute()
                             is OperatorBlock -> block.execute()
                         }
                     }
+                variableList.forEach {
+                    it.value = 0
+                }
+                placedBlocks.forEach { block->
+                    when (block)
+                    {
+                        is PrintValueBlock-> block.updateAvailableVariables(variableList)
+                        is SetVarBlock -> block.updateAvailableVariables(variableList)
+                        is OperatorBlock -> block.updateAvailableVariables(variableList)
+                    }
+                }
             },
             modifier = Modifier,
             containerColor = Color(0xFF4CAF50),
