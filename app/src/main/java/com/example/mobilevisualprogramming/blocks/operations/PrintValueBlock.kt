@@ -1,6 +1,5 @@
 package com.example.mobilevisualprogramming.blocks.operations
 
-import android.graphics.Paint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -12,35 +11,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.mobilevisualprogramming.blocks.OperationBlock
-import com.example.mobilevisualprogramming.blocks.render.OperatorVisualBlock
+import com.example.mobilevisualprogramming.blocks.renders.OperatorVisualBlock
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.text.style.TextAlign
 import com.example.mobilevisualprogramming.main.VariableData
 
 class PrintValueBlock(availableVariables: List<VariableData>) : OperationBlock(availableVariables)
 {
-    var variableName by mutableStateOf("")
+    private var variableName by mutableStateOf("")
+    private var temp by mutableStateOf("...временный вывод...")
 
-    ////////////////////////////////////////////////////////////////////////////
-    var temp by mutableStateOf("...временный вывод...")
-////////////////////////////////////////////////////////////////////////////
-
-    protected fun isBracketsValid(s: String): Boolean {
-        var balance = 0
-        for (char in s) {
-            when (char) {
-                '(' -> balance++
-                ')' -> {
-                    balance--
-                    if (balance < 0) return false
-                }
-            }
-        }
-        return balance == 0
-    }
-
-    protected fun validateVariableName(varName: String) {
+    private fun validateVariableName(varName: String) {
         if (varName.isBlank()) {
             throw IllegalArgumentException("Введите название переменной")
         }
@@ -62,12 +43,12 @@ class PrintValueBlock(availableVariables: List<VariableData>) : OperationBlock(a
             temp = "...временный вывод..."
         }
     }
-    val textFieldBgColor = Color(0xFF4B2267)
+    private val textFieldBgColor = Color(0xFF4B2267)
+
     @Composable
     override fun Render() {
         OperatorVisualBlock(
             title = " Печать:",
-            modifier = Modifier.padding(8.dp),
             blockId = id
         ) {
             Column(

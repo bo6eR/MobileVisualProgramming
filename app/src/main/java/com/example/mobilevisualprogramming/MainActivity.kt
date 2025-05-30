@@ -31,12 +31,13 @@ import androidx.compose.ui.unit.sp
 import com.example.mobilevisualprogramming.blocks.*
 import com.example.mobilevisualprogramming.blocks.messages.*
 import com.example.mobilevisualprogramming.blocks.operators.*
-import com.example.mobilevisualprogramming.blocks.getandset.SetVarBlock
+import com.example.mobilevisualprogramming.blocks.setters.SetVarBlock
 import com.example.mobilevisualprogramming.blocks.operations.PrintValueBlock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import androidx.compose.ui.res.painterResource
+import com.example.mobilevisualprogramming.blocks.operations.IfBlock
 import com.example.mobilevisualprogramming.main.VariableData
 
 class MainActivity : ComponentActivity() {
@@ -58,7 +59,8 @@ class MainActivity : ComponentActivity() {
                     "-" to { vars: List<VariableData> -> SubtractionBlock(vars) },
                     "*" to { vars: List<VariableData> -> MultiplicationBlock(vars) },
                     "/" to { vars: List<VariableData> -> DivisionBlock(vars) },
-                    "печать" to { vars: List<VariableData> -> PrintValueBlock(vars)}
+                    "печать" to { vars: List<VariableData> -> PrintValueBlock(vars)},
+                    "условие" to { vars: List<VariableData> -> IfBlock(vars)}
                 )
 
                 fun updateVariablesInBlocks(newVariables: List<VariableData>) {
@@ -189,12 +191,6 @@ fun MainPage(
                                 else{
                                     placedBlocks.removeIf { it.id == block.id }
                                 }
-                                //placedBlocks.forEach{ it ->
-                                //    if (it.id == block.id){
-                                //        placedBlocks.remove(block)
-                                //        println("SUCCESS")
-                                //    }
-                                //}
                                 onBlockPositionChanged()
                             }
                         )
@@ -217,14 +213,23 @@ fun MainPage(
     ) {
         FloatingActionButton(
             onClick = {
-                placedBlocks.sortedBy { it.id }.forEach { block ->
-                        when (block)
+                var currentIndex = 0
+                val sortedBlocks = placedBlocks.sortedBy { it.id }
+                while (currentIndex < sortedBlocks.size) {
+                    when (val block = sortedBlocks[currentIndex])
+                    {
+                        is PrintValueBlock -> block.execute()
+                        is SetVarBlock -> block.execute()
+                        is OperatorBlock -> block.execute()
+                        is IfBlock ->
                         {
-                            is PrintValueBlock-> block.execute()
-                            is SetVarBlock -> block.execute()
-                            is OperatorBlock -> block.execute()
+                            block.execute(sortedBlocks, block.id)
+                            val steps = block.step.toIntOrNull() ?: 0
+                            currentIndex += steps
                         }
                     }
+                    currentIndex++
+                }
                 variableList.forEach {
                     it.value = 0
                 }
@@ -234,6 +239,7 @@ fun MainPage(
                         is PrintValueBlock-> block.updateAvailableVariables(variableList)
                         is SetVarBlock -> block.updateAvailableVariables(variableList)
                         is OperatorBlock -> block.updateAvailableVariables(variableList)
+                        is IfBlock -> block.updateAvailableVariables(variableList)
                     }
                 }
             },

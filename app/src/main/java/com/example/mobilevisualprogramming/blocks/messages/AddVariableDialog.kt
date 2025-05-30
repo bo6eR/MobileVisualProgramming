@@ -2,8 +2,6 @@ package com.example.mobilevisualprogramming.blocks.messages
 
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.window.DialogProperties
 import com.example.mobilevisualprogramming.main.VariableData
 

@@ -1,7 +1,5 @@
-package com.example.mobilevisualprogramming.blocks.getandset
+package com.example.mobilevisualprogramming.blocks.setters
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.*
@@ -11,15 +9,10 @@ import com.example.mobilevisualprogramming.blocks.VarBlock
 import com.example.mobilevisualprogramming.main.VariableData
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import java.util.*
 
@@ -29,8 +22,8 @@ class SetVarBlock(
     override val variable: VariableData,
     private var availableVariables: List<VariableData>
 ) : VarBlock(variable) {
-    var expression by mutableStateOf("")
-    var error by mutableStateOf("")
+    private var expression by mutableStateOf("")
+    private var error by mutableStateOf("")
 
     fun updateAvailableVariables(newVariables: List<VariableData>) {
         availableVariables = newVariables
@@ -53,7 +46,7 @@ class SetVarBlock(
         return balance == 0
     }
 
-    fun evaluateExpression(expr: String, vars: List<VariableData>): Int {
+    private fun evaluateExpression(expr: String, vars: List<VariableData>): Int {
         val replaced = Regex("[a-zA-Z_]\\w*").replace(expr) {
             val name = it.value
             vars.find { it.name == name }?.toString() ?: throw IllegalArgumentException("Переменная \"$name\" не объявлена")

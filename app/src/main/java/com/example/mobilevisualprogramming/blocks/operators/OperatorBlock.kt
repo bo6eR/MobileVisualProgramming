@@ -7,21 +7,20 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.example.mobilevisualprogramming.blocks.render.OperatorVisualBlock
+import com.example.mobilevisualprogramming.blocks.renders.OperatorVisualBlock
 import java.util.*
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TextField
 import com.example.mobilevisualprogramming.blocks.OperationBlock
 import com.example.mobilevisualprogramming.main.VariableData
 
-
 abstract class OperatorBlock(
     override var availableVariables: List<VariableData>
 ) : OperationBlock(availableVariables) {
     var targetVarName by mutableStateOf("")
-    var expression by mutableStateOf("")
+    private var expression by mutableStateOf("")
 
-    protected fun isBracketsValid(s: String): Boolean {
+    private fun isBracketsValid(s: String): Boolean {
         var balance = 0
         for (char in s) {
             when (char) {
@@ -118,7 +117,6 @@ abstract class OperatorBlock(
     override fun Render() {
         OperatorVisualBlock(
             title = getOperatorTitle(),
-            modifier = Modifier.padding(8.dp),
             blockId = id
         ) {
             Column(

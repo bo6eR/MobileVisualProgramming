@@ -11,7 +11,7 @@ class DivisionBlock(
         "*" -> a * b
         "/" -> a / b
         "-" -> a - b
-        else -> throw IllegalArgumentException("Unsupported operation: $op")
+        else -> throw IllegalArgumentException("Неверная операция: $op")
     }
 
     override fun execute(): Boolean {

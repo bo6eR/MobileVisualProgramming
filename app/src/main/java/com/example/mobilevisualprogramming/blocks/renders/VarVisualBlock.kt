@@ -1,4 +1,4 @@
-package com.example.mobilevisualprogramming.blocks.render
+package com.example.mobilevisualprogramming.blocks.renders
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -20,10 +20,8 @@ class VarVisualBlock(
     val blockId: Int = -1,
     val content: @Composable ColumnScope.() -> Unit
 ) {
-    val blockBgColor = Color(0xFF6750A4)
-    val textFieldBgColor = Color(0xFF4B2267)
-    val placeholderColor = Color(0xFF6D6D6D)
-    val idColor = Color(0xFFFBE200)
+    private val blockBgColor = Color(0xFF6750A4)
+    private val idColor = Color(0xFFFBE200)
 
     @Composable
     fun Render() {

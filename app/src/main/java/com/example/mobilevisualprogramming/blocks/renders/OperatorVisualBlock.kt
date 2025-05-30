@@ -1,4 +1,4 @@
-package com.example.mobilevisualprogramming.blocks.render
+package com.example.mobilevisualprogramming.blocks.renders
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -16,12 +16,11 @@ import androidx.compose.ui.unit.sp
 
 class OperatorVisualBlock(
     val title: String,
-    val modifier: Modifier = Modifier,
     val blockId: Int = -1,
     val content: @Composable ColumnScope.() -> Unit
 ) {
-    val blockBgColor = Color(0xFF6750A4)
-    val idColor = Color(0xFFFBE200)
+    private val blockBgColor = Color(0xFF6750A4)
+    private val idColor = Color(0xFFFBE200)
 
     @Composable
     fun Render() {
