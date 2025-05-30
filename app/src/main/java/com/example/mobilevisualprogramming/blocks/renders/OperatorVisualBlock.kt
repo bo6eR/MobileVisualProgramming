@@ -10,17 +10,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.mobilevisualprogramming.R
 
 class OperatorVisualBlock(
     val title: String,
     val blockId: Int = -1,
     val content: @Composable ColumnScope.() -> Unit
 ) {
-    private val blockBgColor = Color(0xFF6750A4)
-    private val idColor = Color(0xFFFBE200)
+    private val blockBgColor @Composable get() = colorResource(id = R.color.block_bg_color)
+    private val idColor @Composable get() = colorResource(id = R.color.id_color)
 
     @Composable
     fun Render() {

@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.ui.res.stringResource
 import android.content.Context
+import androidx.compose.ui.res.colorResource
 import com.example.mobilevisualprogramming.R
 
 class IfBlock(availableVariables: List<VariableData>) : OperationBlock(availableVariables) {
@@ -172,7 +173,7 @@ class IfBlock(availableVariables: List<VariableData>) : OperationBlock(available
         )
     }
 
-    private val textFieldBgColor = Color(0xFF4B2267)
+    private val textFieldBgColor @Composable get() = colorResource(id = R.color.text_field_bg_color)
 
     @Composable
     override fun Render(context: Context) {

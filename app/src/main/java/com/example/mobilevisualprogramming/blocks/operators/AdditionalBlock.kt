@@ -19,7 +19,7 @@ class AdditionBlock(
     override fun execute(context: Context): Boolean {
         error = ""
         return try {
-            validateInputs()
+            validateInputs(context)
             val result = evaluateExpression(context)
             availableVariables.find { it.name == targetVarName }?.value = result
             true

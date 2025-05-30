@@ -12,8 +12,11 @@ import com.example.mobilevisualprogramming.blocks.renders.OperatorVisualBlock
 import java.util.*
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TextField
+import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.stringResource
 import com.example.mobilevisualprogramming.blocks.OperationBlock
 import com.example.mobilevisualprogramming.main.VariableData
+import com.example.mobilevisualprogramming.R
 
 abstract class OperatorBlock(
     override var availableVariables: List<VariableData>
@@ -43,16 +46,17 @@ abstract class OperatorBlock(
             is SubtractionBlock -> "$targetVarName - ($expression)"
             is MultiplicationBlock -> "$targetVarName * ($expression)"
             is DivisionBlock -> "$targetVarName / ($expression)"
-            else -> throw IllegalStateException("Неверный тип оператора")
+            else -> throw IllegalArgumentException(context.getString(R.string.error_invalid_operator_type))
         }
         println("2")
         val replaced = Regex("[a-zA-Z_]\\w*").replace(fullExpression) {
             availableVariables.find { varData -> varData.name == it.value }?.value?.toString()
-                ?: throw IllegalArgumentException("Переменная '${it.value}' не найдена")
+                ?: throw IllegalArgumentException(context.getString(R.string.error_variable_not_found, it.value))
         }
         println("3")
         if (Regex("[^0-9+\\-*/%().\\s]").containsMatchIn(replaced)) {
-            throw IllegalArgumentException("Недопустимые символы в выражении")
+            throw IllegalArgumentException(context.getString(R.string.error_invalid_characters_in_expression))
+
         }
         println("4")
         return evaluateRPN(toRPN(replaced), context)
@@ -112,7 +116,7 @@ abstract class OperatorBlock(
     protected abstract fun applyOperation(a: Int, b: Int, op: String, context: Context): Int
     abstract fun execute(context: Context): Boolean
 
-    private val textFieldBgColor = Color(0xFF4B2267)
+    private val textFieldBgColor @Composable get() = colorResource(id = R.color.text_field_bg_color)
 
     @Composable
     override fun Render(context: Context) {
@@ -124,7 +128,7 @@ abstract class OperatorBlock(
                 modifier = Modifier.padding(8.dp),
             ) {
                 Text(
-                    text = " Переменная:",
+                    text = stringResource(R.string.label_variable),
                     color = Color.White
                 )
                 TextField(
@@ -150,7 +154,7 @@ abstract class OperatorBlock(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Text(
-                    text = " Выражение:",
+                    text = stringResource(R.string.label_expression),
                     color = Color.White
                 )
                 TextField(
@@ -180,15 +184,15 @@ abstract class OperatorBlock(
         }.Render()
     }
 
-    protected fun validateInputs() {
+    protected fun validateInputs(context: Context) {
         if (targetVarName.isBlank()) {
-            throw IllegalArgumentException("Введите название переменной")
+            throw IllegalArgumentException(context.getString(R.string.error_enter_variable_name))
         }
         if (expression.isBlank()) {
-            throw IllegalArgumentException("Введите выражение")
+            throw IllegalArgumentException(context.getString(R.string.error_enter_expression))
         }
         if (!isBracketsValid(expression)) {
-            throw IllegalArgumentException("Несбалансированные скобки")
+            throw IllegalArgumentException(context.getString(R.string.error_unbalanced_brackets))
         }
     }
 

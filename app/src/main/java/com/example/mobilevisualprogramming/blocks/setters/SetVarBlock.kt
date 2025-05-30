@@ -14,11 +14,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import com.example.mobilevisualprogramming.R
 import java.util.*
 
-val textFieldBgColor = Color(0xFF4B2267)
+private val textFieldBgColor @Composable get() = colorResource(id = R.color.text_field_bg_color)
 
 class SetVarBlock(
     override val variable: VariableData,

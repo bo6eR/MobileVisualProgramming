@@ -63,16 +63,13 @@
 
     <string name="value_display">Значение: %1$s</string>
     <string name="variable_display">Переменная: %1$s</string>
+    <string name="error_invalid_operator_type">Неверный тип оператора</string>
+    <string name="error_variable_not_found">Переменная "%1$s" не найдена</string>
 
-
-
-
-
-
-
-
-
-
+    <string name="label_variable"> Переменная:</string>
+    <string name="label_expression"> Выражение:</string>
+    <string name="error_enter_variable_name">Введите название переменной</string>
+    <string name="error_enter_expression">Введите выражение</string>
 
 
 

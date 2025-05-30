@@ -17,13 +17,13 @@ import androidx.compose.ui.Alignment
 import com.example.mobilevisualprogramming.main.VariableData
 import androidx.compose.ui.res.stringResource
 import android.content.Context
+import androidx.compose.ui.res.colorResource
 import com.example.mobilevisualprogramming.R
 
 class PrintValueBlock(availableVariables: List<VariableData>) : OperationBlock(availableVariables) {
     private var variableName by mutableStateOf("")
     private var temp by mutableStateOf("")
-
-    private val textFieldBgColor = Color(0xFF4B2267)
+    private val textFieldBgColor @Composable get() = colorResource(id = R.color.text_field_bg_color)
 
     private fun validateVariableName(varName: String, context: Context) {
         if (varName.isBlank()) {
