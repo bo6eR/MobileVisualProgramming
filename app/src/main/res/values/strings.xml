@@ -70,7 +70,5 @@
     <string name="label_expression"> Выражение:</string>
     <string name="error_enter_variable_name">Введите название переменной</string>
     <string name="error_enter_expression">Введите выражение</string>
-
-
-
+    <string name="invalid_variable_name">Недопустимое имя переменной</string>
 </resources>
