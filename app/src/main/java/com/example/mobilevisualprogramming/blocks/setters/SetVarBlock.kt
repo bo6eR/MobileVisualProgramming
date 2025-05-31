@@ -25,31 +25,16 @@ class SetVarBlock(
     private var expression by mutableStateOf("")
     private var error by mutableStateOf("")
 
-    fun updateAvailableVariables(newVariables: List<VariableData>) {
+    override fun updateAvailableVariables(newVariables: List<VariableData>) {
+        super.updateAvailableVariables(newVariables)
         availableVariables = newVariables
-    }
-
-    private fun isBracketsValid(s: String): Boolean {
-        var balance = 0
-        for (char in s)
-        {
-            when (char)
-            {
-                '(' -> balance++
-                ')' ->
-                {
-                    balance--
-                    if (balance < 0) return false
-                }
-            }
-        }
-        return balance == 0
     }
 
     private fun evaluateExpression(expr: String, vars: List<VariableData>): Int {
         val replaced = Regex("[a-zA-Z_]\\w*").replace(expr) {
             val name = it.value
-            vars.find { it.name == name }?.toString() ?: throw IllegalArgumentException("Переменная \"$name\" не объявлена")
+            vars.find { it.name == name }?.toString()
+                ?: throw IllegalArgumentException("Переменная \"$name\" не объявлена")
         }
 
         if (Regex("[^0-9+\\-*/%().\\s]").containsMatchIn(replaced)) {
@@ -68,14 +53,16 @@ class SetVarBlock(
         for (token in tokens) {
             when {
                 token.matches(Regex("\\d+")) -> output.add(token)
-                token in listOf("+", "-", "*", "/", "%") ->
-                {
-                    while (!stack.isEmpty() && stack.peek() != "(" && (precedence(stack.peek()) >= precedence(token)))
-                    {
+                token in listOf("+", "-", "*", "/", "%") -> {
+                    while (!stack.isEmpty() && stack.peek() != "(" && (precedence(stack.peek()) >= precedence(
+                            token
+                        ))
+                    ) {
                         output.add(stack.pop())
                     }
                     stack.push(token)
                 }
+
                 token == "(" -> stack.push(token)
                 token == ")" -> {
                     while (stack.peek() != "(") {
@@ -107,21 +94,23 @@ class SetVarBlock(
                 else -> {
                     val b = stack.pop()
                     val a = stack.pop()
-                    stack.push(when (token) {
-                        "+" -> a + b
-                        "-" -> a - b
-                        "*" -> a * b
-                        "/" -> a / b
-                        "%" -> a % b
-                        else -> throw IllegalArgumentException("Неизвестный оператор: $token")
-                    })
+                    stack.push(
+                        when (token) {
+                            "+" -> a + b
+                            "-" -> a - b
+                            "*" -> a * b
+                            "/" -> a / b
+                            "%" -> a % b
+                            else -> throw IllegalArgumentException("Неизвестный оператор: $token")
+                        }
+                    )
                 }
             }
         }
         return stack.pop()
     }
 
-    fun execute() {
+    override fun execute() {
         error = ""
         try {
             if (!isBracketsValid(expression)) {
@@ -129,7 +118,7 @@ class SetVarBlock(
             }
             val result = evaluateExpression(expression, availableVariables)
             variable.value = result
-            availableVariables.find { it.name ==  variable.name }?.value = result
+            availableVariables.find { it.name == variable.name }?.value = result
         } catch (e: Exception) {
             error = "Ошибка: ${e.message}"
         }
@@ -138,8 +127,9 @@ class SetVarBlock(
     @Composable
     override fun RenderContent() {
         Column(modifier = Modifier) {
-            Row(modifier = Modifier
-                .padding(8.dp),
+            Row(
+                modifier = Modifier
+                    .padding(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(

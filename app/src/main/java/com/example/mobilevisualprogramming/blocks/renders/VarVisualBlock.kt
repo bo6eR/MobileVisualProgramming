@@ -41,7 +41,9 @@ class VarVisualBlock(
                 Row(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth().padding(start = 8.dp, end = 8.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 8.dp, end = 8.dp)
                 ) {
                     Text(
                         text = title,

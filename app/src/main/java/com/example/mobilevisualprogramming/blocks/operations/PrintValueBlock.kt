@@ -16,8 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Alignment
 import com.example.mobilevisualprogramming.main.VariableData
 
-class PrintValueBlock(availableVariables: List<VariableData>) : OperationBlock(availableVariables)
-{
+class PrintValueBlock(availableVariables: List<VariableData>) : OperationBlock(availableVariables) {
     private var variableName by mutableStateOf("")
     private var temp by mutableStateOf("...временный вывод...")
 
@@ -30,7 +29,7 @@ class PrintValueBlock(availableVariables: List<VariableData>) : OperationBlock(a
         }
     }
 
-    fun execute() {
+    override fun execute() {
         try {
             validateVariableName(variableName)
             val value = availableVariables.find { it.name == variableName }?.value
@@ -43,6 +42,7 @@ class PrintValueBlock(availableVariables: List<VariableData>) : OperationBlock(a
             temp = "...временный вывод..."
         }
     }
+
     private val textFieldBgColor = Color(0xFF4B2267)
 
     @Composable
@@ -86,15 +86,19 @@ class PrintValueBlock(availableVariables: List<VariableData>) : OperationBlock(a
                 Box(
                     modifier = Modifier
                         .background(
-                        color = textFieldBgColor,
-                        shape = RoundedCornerShape(12.dp)
+                            color = textFieldBgColor,
+                            shape = RoundedCornerShape(12.dp)
                         )
                         .fillMaxWidth()
                         .height(56.dp)
                         .padding(0.dp),
                     contentAlignment = Alignment.CenterStart
-                ){
-                    Text(text = temp, color = Color.White, modifier = Modifier.padding(start = 16.dp))
+                ) {
+                    Text(
+                        text = temp,
+                        color = Color.White,
+                        modifier = Modifier.padding(start = 16.dp)
+                    )
                 }
 
                 if (error.isNotEmpty()) {

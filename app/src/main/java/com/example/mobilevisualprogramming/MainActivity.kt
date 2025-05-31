@@ -41,16 +41,13 @@ class MainActivity : ComponentActivity() {
                     "-" to { vars: List<VariableData> -> SubtractionBlock(vars) },
                     "*" to { vars: List<VariableData> -> MultiplicationBlock(vars) },
                     "/" to { vars: List<VariableData> -> DivisionBlock(vars) },
-                    "печать" to { vars: List<VariableData> -> PrintValueBlock(vars)},
-                    "условие" to { vars: List<VariableData> -> IfBlock(vars)}
+                    "печать" to { vars: List<VariableData> -> PrintValueBlock(vars) },
+                    "условие" to { vars: List<VariableData> -> IfBlock(vars) }
                 )
 
                 fun updateVariablesInBlocks(newVariables: List<VariableData>) {
                     placedBlocks.forEach { block ->
-                        when (block) {
-                            is OperationBlock -> block.updateAvailableVariables(newVariables)
-                            is SetVarBlock -> block.updateAvailableVariables(newVariables)
-                        }
+                        block.updateAvailableVariables(newVariables)
                     }
                 }
 
@@ -90,7 +87,7 @@ class MainActivity : ComponentActivity() {
                                         position = variable.position
                                     )
                                     val block = SetVarBlock(newVariable, variableList)
-                                    block.id = nextBlockId+1
+                                    block.id = nextBlockId + 1
 
                                     placedBlocks.add(block)
                                     scope.launch { variablesDrawerState.close() }
@@ -109,7 +106,9 @@ class MainActivity : ComponentActivity() {
                         placedBlocks = placedBlocks,
                         variablesDrawerState = variablesDrawerState,
                         scope = scope,
-                        onBlockPositionChanged = { nextBlockId = updateBlockIdsByPosition(placedBlocks) },
+                        onBlockPositionChanged = {
+                            nextBlockId = updateBlockIdsByPosition(placedBlocks)
+                        },
                         variableList.toMutableStateList()
                     )
                 }

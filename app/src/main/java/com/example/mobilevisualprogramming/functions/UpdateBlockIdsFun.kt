@@ -5,8 +5,7 @@ import com.example.mobilevisualprogramming.blocks.Block
 
 fun updateBlockIdsByPosition(
     placedBlocks: SnapshotStateList<Block>
-) : Int
-{
+): Int {
     val sortedBlocks = placedBlocks.sortedBy { it.variable.position.x }
     sortedBlocks.forEachIndexed { index, block ->
         block.id = index + 1

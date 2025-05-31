@@ -31,9 +31,6 @@ import androidx.compose.ui.unit.dp
 import com.example.mobilevisualprogramming.R
 import com.example.mobilevisualprogramming.blocks.Block
 import com.example.mobilevisualprogramming.blocks.operations.IfBlock
-import com.example.mobilevisualprogramming.blocks.operations.PrintValueBlock
-import com.example.mobilevisualprogramming.blocks.operators.OperatorBlock
-import com.example.mobilevisualprogramming.blocks.setters.SetVarBlock
 import com.example.mobilevisualprogramming.main.VariableData
 import kotlinx.coroutines.CoroutineScope
 import kotlin.math.roundToInt
@@ -49,20 +46,21 @@ fun MainPage(
     var scale by remember { mutableFloatStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
 
-    Box(modifier = Modifier
-        .fillMaxSize()
-        .transformable(
-            state = rememberTransformableState { zoomChange, panChange, _ ->
-                scale = (scale * zoomChange).coerceIn(0.2f, 2f)
-                offset += panChange
-            }
-        )
-        .graphicsLayer(
-            scaleX = scale,
-            scaleY = scale,
-            translationX = offset.x,
-            translationY = offset.y
-        )
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .transformable(
+                state = rememberTransformableState { zoomChange, panChange, _ ->
+                    scale = (scale * zoomChange).coerceIn(0.2f, 2f)
+                    offset += panChange
+                }
+            )
+            .graphicsLayer(
+                scaleX = scale,
+                scaleY = scale,
+                translationX = offset.x,
+                translationY = offset.y
+            )
     ) {
         placedBlocks.forEach { block ->
             Box(
@@ -84,13 +82,12 @@ fun MainPage(
                             }
                         )
                     }
-                    .pointerInput(Unit){
+                    .pointerInput(Unit) {
                         detectTapGestures(
                             onDoubleTap = {
-                                if (placedBlocks.size == 1){
+                                if (placedBlocks.size == 1) {
                                     placedBlocks.clear()
-                                }
-                                else{
+                                } else {
                                     placedBlocks.removeIf { it.id == block.id }
                                 }
                                 onBlockPositionChanged()
@@ -116,31 +113,22 @@ fun MainPage(
                 var currentIndex = 0
                 val sortedBlocks = placedBlocks.sortedBy { it.id }
                 while (currentIndex < sortedBlocks.size) {
-                    when (val block = sortedBlocks[currentIndex])
-                    {
-                        is PrintValueBlock -> block.execute()
-                        is SetVarBlock -> block.execute()
-                        is OperatorBlock -> block.execute()
-                        is IfBlock ->
-                        {
+                    when (val block = sortedBlocks[currentIndex]) {
+                        is IfBlock -> {
                             block.execute(sortedBlocks, block.id)
                             val steps = block.step.toIntOrNull() ?: 0
                             currentIndex += steps
                         }
+
+                        else -> block.execute()
                     }
                     currentIndex++
                 }
                 variableList.forEach {
                     it.value = 0
                 }
-                placedBlocks.forEach { block->
-                    when (block)
-                    {
-                        is PrintValueBlock -> block.updateAvailableVariables(variableList)
-                        is SetVarBlock -> block.updateAvailableVariables(variableList)
-                        is OperatorBlock -> block.updateAvailableVariables(variableList)
-                        is IfBlock -> block.updateAvailableVariables(variableList)
-                    }
+                placedBlocks.forEach { block ->
+                    block.updateAvailableVariables(variableList)
                 }
             },
             modifier = Modifier,

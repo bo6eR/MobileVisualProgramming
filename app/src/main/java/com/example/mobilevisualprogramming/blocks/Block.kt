@@ -11,4 +11,24 @@ abstract class Block(open val variable: VariableData)
     @Composable
     abstract fun Render()
 
+    open fun execute() {}
+    open fun execute(placedBlocks: List<Block>, currentBlockId: Int) {}
+
+    open fun updateAvailableVariables(newVariables: List<VariableData>) {}
+
+    protected fun isBracketsValid(s: String): Boolean {
+        var balance = 0
+        for (char in s) {
+            when (char) {
+                '(' -> balance++
+                ')' ->
+                {
+                    balance--
+                    if (balance < 0) return false
+                }
+            }
+        }
+        return balance == 0
+    }
+
 }

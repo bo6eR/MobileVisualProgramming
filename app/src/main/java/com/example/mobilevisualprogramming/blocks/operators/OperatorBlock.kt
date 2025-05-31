@@ -20,22 +20,7 @@ abstract class OperatorBlock(
     var targetVarName by mutableStateOf("")
     private var expression by mutableStateOf("")
 
-    private fun isBracketsValid(s: String): Boolean {
-        var balance = 0
-        for (char in s) {
-            when (char) {
-                '(' -> balance++
-                ')' -> {
-                    balance--
-                    if (balance < 0) return false
-                }
-            }
-        }
-        return balance == 0
-    }
-
-    protected fun evaluateExpression(): Int
-    {
+    protected fun evaluateExpression(): Int {
         println("1")
         val fullExpression = when (this) {
             is AdditionBlock -> "$targetVarName + ($expression)"
@@ -67,11 +52,13 @@ abstract class OperatorBlock(
                 token.matches(Regex("\\d+")) -> output.add(token)
                 token in listOf("+", "-", "*", "/", "%") -> {
                     while (!stack.isEmpty() && stack.peek() != "(" &&
-                        precedence(stack.peek()) >= precedence(token)) {
+                        precedence(stack.peek()) >= precedence(token)
+                    ) {
                         output.add(stack.pop())
                     }
                     stack.push(token)
                 }
+
                 token == "(" -> stack.push(token)
                 token == ")" -> {
                     while (stack.peek() != "(") {
@@ -109,7 +96,6 @@ abstract class OperatorBlock(
     }
 
     protected abstract fun applyOperation(a: Int, b: Int, op: String): Int
-    abstract fun execute(): Boolean
 
     private val textFieldBgColor = Color(0xFF4B2267)
 

@@ -14,16 +14,14 @@ class DivisionBlock(
         else -> throw IllegalArgumentException("Неверная операция: $op")
     }
 
-    override fun execute(): Boolean {
+    override fun execute() {
         error = ""
         return try {
             validateInputs()
             val result = evaluateExpression()
             availableVariables.find { it.name == targetVarName }?.value = result
-            true
         } catch (e: Exception) {
             error = "Ошибка: ${e.message}"
-            false
         }
     }
 

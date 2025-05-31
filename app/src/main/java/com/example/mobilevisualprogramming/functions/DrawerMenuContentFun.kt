@@ -68,7 +68,8 @@ fun DrawerMenuContent(
             Text(
                 text = "Переменные:",
                 color = Color.White,
-                fontSize = 30.sp)
+                fontSize = 30.sp
+            )
             Button(
                 onClick = { showAddDialog.value = true },
                 modifier = Modifier.size(35.dp),
@@ -123,7 +124,7 @@ fun DrawerMenuContent(
             operatorsList = operatorsList,
             onOperatorSelected = { creator ->
                 val operator = creator(variableList)
-                operator.id = nextBlockId+1
+                operator.id = nextBlockId + 1
                 scope.launch { drawerState.close() }
 
                 placedBlocks.add(operator)

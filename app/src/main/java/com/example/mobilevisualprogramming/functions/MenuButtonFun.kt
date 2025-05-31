@@ -21,7 +21,9 @@ fun BoxScope.ButtonOfMenuOpening(scope: CoroutineScope, drawerState: DrawerState
                 if (drawerState.isClosed) drawerState.open() else drawerState.close()
             }
         },
-        modifier = Modifier.align(Alignment.BottomEnd).padding(end = 10.dp, bottom = 40.dp),
+        modifier = Modifier
+            .align(Alignment.BottomEnd)
+            .padding(end = 10.dp, bottom = 40.dp),
     ) {
         Text("Menu", fontSize = 20.sp)
     }

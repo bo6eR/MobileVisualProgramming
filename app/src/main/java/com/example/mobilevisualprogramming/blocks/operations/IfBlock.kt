@@ -9,8 +9,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.fillMaxWidth
 import com.example.mobilevisualprogramming.blocks.Block
 import com.example.mobilevisualprogramming.blocks.OperationBlock
-import com.example.mobilevisualprogramming.blocks.setters.SetVarBlock
-import com.example.mobilevisualprogramming.blocks.operators.OperatorBlock
 import com.example.mobilevisualprogramming.blocks.renders.OperatorVisualBlock
 import com.example.mobilevisualprogramming.main.VariableData
 import kotlin.math.min
@@ -31,27 +29,21 @@ class IfBlock(availableVariables: List<VariableData>) : OperationBlock(available
     private val comparisonOperators = listOf(">", "<", ">=", "<=", "==", "!=")
     private val logicalOperators = listOf("&&", "||")
 
-    fun execute(placedBlocks: List<Block>, currentBlockId: Int) {
-        try
-        {
+    override fun execute(placedBlocks: List<Block>, currentBlockId: Int) {
+        try {
             validateInputs()
             val conditionResult = evaluateCondition()
             lastExecutionResult = if (conditionResult) "Условие истинно" else "Условие ложно"
 
-            if (conditionResult)
-            {
+            if (conditionResult) {
                 val steps = step.toInt()
                 val currentIndex = placedBlocks.indexOfFirst { it.id == currentBlockId }
-                if (currentIndex != -1)
-                {
+                if (currentIndex != -1) {
                     val endIndex = min(currentIndex + steps + 1, placedBlocks.size)
-                    for (i in currentIndex + 1 until endIndex)
-                    {
+                    for (i in currentIndex + 1 until endIndex) {
                         when (val block = placedBlocks[i]) {
-                            is PrintValueBlock -> block.execute()
-                            is SetVarBlock -> block.execute()
-                            is OperatorBlock -> block.execute()
                             is IfBlock -> block.execute(placedBlocks, block.id)
+                            else -> block.execute()
                         }
                     }
                 }
@@ -89,7 +81,8 @@ class IfBlock(availableVariables: List<VariableData>) : OperationBlock(available
 
         var processedCondition = condition
         availableVariables.forEach { variable ->
-            processedCondition = processedCondition.replace(variable.name, variable.value.toString())
+            processedCondition =
+                processedCondition.replace(variable.name, variable.value.toString())
         }
 
         if (!containsValidOperators(processedCondition)) {
@@ -121,8 +114,10 @@ class IfBlock(availableVariables: List<VariableData>) : OperationBlock(available
             if (expression.contains(op)) {
                 val parts = expression.split(op)
                 if (parts.size == 2) {
-                    val left = parts[0].trim().toDoubleOrNull() ?: throw IllegalArgumentException("Некорректное число: ${parts[0]}")
-                    val right = parts[1].trim().toDoubleOrNull() ?: throw IllegalArgumentException("Некорректное число: ${parts[1]}")
+                    val left = parts[0].trim().toDoubleOrNull()
+                        ?: throw IllegalArgumentException("Некорректное число: ${parts[0]}")
+                    val right = parts[1].trim().toDoubleOrNull()
+                        ?: throw IllegalArgumentException("Некорректное число: ${parts[1]}")
 
                     return when (op) {
                         ">" -> left > right
@@ -206,7 +201,11 @@ class IfBlock(availableVariables: List<VariableData>) : OperationBlock(available
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(text = " Результат:", color = Color.White)
-                Text(text = lastExecutionResult, color = Color.White, modifier = Modifier.padding(start = 16.dp))
+                Text(
+                    text = lastExecutionResult,
+                    color = Color.White,
+                    modifier = Modifier.padding(start = 16.dp)
+                )
             }
         }.Render()
     }

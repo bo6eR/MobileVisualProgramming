@@ -9,7 +9,8 @@ abstract class OperationBlock(protected open var availableVariables: List<Variab
 {
     var error by mutableStateOf("")
 
-    fun updateAvailableVariables(newVariables: List<VariableData>) {
+    override fun updateAvailableVariables(newVariables: List<VariableData>) {
+        super.updateAvailableVariables(newVariables)
         availableVariables = newVariables
     }
 }

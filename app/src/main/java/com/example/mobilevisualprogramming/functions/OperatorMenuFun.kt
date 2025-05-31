@@ -31,7 +31,6 @@ fun OperatorsMenuContent(
             color = Color.White,
             fontSize = 30.sp
         )
-
         Spacer(modifier = Modifier.height(16.dp))
 
         operatorsList.forEach { (symbol, creator) ->
